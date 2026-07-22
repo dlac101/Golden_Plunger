@@ -11,7 +11,7 @@
     {key: 'trash', label: 'Trash & surfaces', hint: ''},
     {key: 'bath', label: BATH_LABEL, hint: ''}
   ];
-  var POLISH = {min: 0, max: 10, 'default': 5, label: 'Sparkle'};
+  var SPARKLE = {min: 0, max: 10, 'default': 5, label: 'Sparkle'};
   var CABIN_SPEC = [
     {prefix: 'AG', count: 5},
     {prefix: 'AB', count: 5},
@@ -71,7 +71,7 @@
       belongings: row.belongings,
       trash: row.trash,
       bath: row.bath,
-      polish: row.polish,
+      sparkle: row.sparkle,
       cleanliness: row.cleanliness,
       tieOrder: row.tieOrder,
       inspector: row.inspector,
@@ -90,7 +90,7 @@
       cabins: CABINS,
       ageGroups: AGE_GROUPS,
       bathLabel: BATH_LABEL,
-      polish: {min: POLISH.min, max: POLISH.max, 'default': POLISH['default'], label: POLISH.label}
+      sparkle: {min: SPARKLE.min, max: SPARKLE.max, 'default': SPARKLE['default'], label: SPARKLE.label}
     };
   }
 
@@ -124,8 +124,8 @@
     var belongings = validateInt_('Belongings', rec.belongings, 0, 2);
     var trash = validateInt_('Trash', rec.trash, 0, 2);
     var bath = validateInt_('Bath', rec.bath, 0, 2);
-    var polishRaw = isBlank_(rec.polish) ? POLISH['default'] : rec.polish;
-    var polish = validateInt_('Polish', polishRaw, POLISH.min, POLISH.max);
+    var sparkleRaw = isBlank_(rec.sparkle) ? SPARKLE['default'] : rec.sparkle;
+    var sparkle = validateInt_('Sparkle', sparkleRaw, SPARKLE.min, SPARKLE.max);
     var cleanliness = floors + beds + belongings + trash + bath;
     var inspector = rec.inspector == null ? '' : String(rec.inspector).trim();
     var notes = rec.notes == null ? '' : String(rec.notes);
@@ -141,7 +141,7 @@
     var tie_order = null;
     if (row_index >= 0) {
       var existing = score_rows[row_index];
-      var unchanged = existing.polish === polish && existing.cleanliness === cleanliness;
+      var unchanged = existing.sparkle === sparkle && existing.cleanliness === cleanliness;
       if (unchanged && !isBlank_(existing.tieOrder)) {
         tie_order = existing.tieOrder;
       }
@@ -158,7 +158,7 @@
       belongings: belongings,
       trash: trash,
       bath: bath,
-      polish: polish,
+      sparkle: sparkle,
       cleanliness: cleanliness,
       tieOrder: tie_order,
       inspector: inspector,
@@ -168,7 +168,7 @@
     if (row_index >= 0) score_rows[row_index] = row;
     else score_rows.push(row);
 
-    return {ok: true, cleanliness: cleanliness, polish: polish, day: day, cabin: cabin.code};
+    return {ok: true, cleanliness: cleanliness, sparkle: sparkle, day: day, cabin: cabin.code};
   }
 
   function getScores(day) {
@@ -181,7 +181,7 @@
 
   function compareRanking_(a, b) {
     if (b.cleanliness !== a.cleanliness) return b.cleanliness - a.cleanliness;
-    if (b.polish !== a.polish) return b.polish - a.polish;
+    if (b.sparkle !== a.sparkle) return b.sparkle - a.sparkle;
     var at = a.tieOrder;
     var bt = b.tieOrder;
     if (at !== null && bt !== null && at !== bt) return at - bt;
@@ -195,7 +195,7 @@
   function annotateGroup_(list) {
     var clusters = {};
     list.forEach(function (r) {
-      var key = r.cleanliness + '|' + r.polish;
+      var key = r.cleanliness + '|' + r.sparkle;
       (clusters[key] = clusters[key] || []).push(r);
     });
 
@@ -222,7 +222,7 @@
   }
 
   function sameCluster_(a, b) {
-    return a.cleanliness === b.cleanliness && a.polish === b.polish;
+    return a.cleanliness === b.cleanliness && a.sparkle === b.sparkle;
   }
 
   function isClusterLead_(list, i) {
@@ -241,14 +241,14 @@
         belongings: c.belongings,
         trash: c.trash,
         bath: c.bath,
-        polish: c.polish,
+        sparkle: c.sparkle,
         notes: c.notes
       });
     }
     return {
       ageGroup: ageGroup,
       cleanliness: lead.cleanliness,
-      polish: lead.polish,
+      sparkle: lead.sparkle,
       cabins: cabins
     };
   }
@@ -271,7 +271,7 @@
       winner = {
         cabin: top.cabin,
         cleanliness: top.cleanliness,
-        polish: top.polish,
+        sparkle: top.sparkle,
         winnerProvisional: top.inTie && !top.tieResolved
       };
     }
@@ -339,7 +339,7 @@
         rowByCode[row.cabin] = {
           rowIndex: i,
           cleanliness: row.cleanliness,
-          polish: row.polish
+          sparkle: row.sparkle
         };
       }
     }
@@ -350,8 +350,8 @@
       if (!info) throw new Error('Cabin ' + c + ' has no score for ' + day + '.');
       if (ref === null) {
         ref = info;
-      } else if (info.cleanliness !== ref.cleanliness || info.polish !== ref.polish) {
-        throw new Error('Cabins are not a real tie (they differ on Cleanliness or Polish).');
+      } else if (info.cleanliness !== ref.cleanliness || info.sparkle !== ref.sparkle) {
+        throw new Error('Cabins are not a real tie (they differ on Cleanliness or Sparkle).');
       }
     });
 

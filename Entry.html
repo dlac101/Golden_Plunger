@@ -280,7 +280,7 @@
   .spotless.done{background:var(--accent-green);color:var(--score-ink);border-style:solid}
 
   .card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-  .card.polish{margin-top:10px;border-style:dashed}
+  .card.sparkle{margin-top:10px;border-style:dashed}
   .cat{display:flex;align-items:center;gap:10px;padding:11px 12px}
   .cat + .cat{border-top:1px solid var(--border)}
   .cat-info{flex:1;min-width:0}
@@ -310,13 +310,13 @@
   }
   .step-btn:disabled{opacity:.35}
   .step-btn:active{transform:scale(.93)}
-  .pol-val{
+  .spark-val{
     min-width:44px;text-align:center;
     font-family:'IBM Plex Mono',Consolas,monospace;
     font-size:22px;font-weight:500;color:var(--text-primary);
   }
-  .pol-val.pop{animation:pop .25s ease}
-  @media (max-width:360px){.step-btn{width:46px;height:46px;font-size:21px}.pol-val{min-width:38px}}
+  .spark-val.pop{animation:pop .25s ease}
+  @media (max-width:360px){.step-btn{width:46px;height:46px;font-size:21px}.spark-val{min-width:38px}}
 
   #notes{
     width:100%;margin-top:12px;padding:11px 12px;min-height:56px;resize:vertical;
@@ -524,16 +524,16 @@ function __toggleTheme(){var r=document.documentElement;var l=!r.classList.conta
 
       <div id="formBody">
         <div class="card" id="catRows"></div>
-        <div class="card polish">
+        <div class="card sparkle">
           <div class="cat">
             <div class="cat-info">
-              <div class="cat-label" id="polishLabel">Polish</div>
-              <div class="cat-hint" id="polishHint">5 = met expectations &middot; breaks ties</div>
+              <div class="cat-label" id="sparkleLabel">Sparkle</div>
+              <div class="cat-hint" id="sparkleHint">5 = met expectations &middot; breaks ties</div>
             </div>
-            <div class="stepper" id="polishStepper" role="group" aria-label="Polish score">
-              <button type="button" class="step-btn" id="polMinus" aria-label="Decrease polish">&minus;</button>
-              <span class="pol-val" id="polishVal" aria-live="polite">5</span>
-              <button type="button" class="step-btn" id="polPlus" aria-label="Increase polish">+</button>
+            <div class="stepper" id="sparkleStepper" role="group" aria-label="Sparkle score">
+              <button type="button" class="step-btn" id="sparkMinus" aria-label="Decrease sparkle">&minus;</button>
+              <span class="spark-val" id="sparkleVal" aria-live="polite">5</span>
+              <button type="button" class="step-btn" id="sparkPlus" aria-label="Increase sparkle">+</button>
             </div>
           </div>
         </div>
@@ -548,7 +548,7 @@ function __toggleTheme(){var r=document.documentElement;var l=!r.classList.conta
       <div class="form-footer">
         <div class="totals" aria-live="polite">
           <div class="tot-line"><span class="tot-label">Cleanliness</span><span class="tot-num" id="cleanNum">0</span><span class="tot-max" id="cleanMaxEl">/10</span></div>
-          <div class="tot-line"><span class="tot-label" id="polishTotLabel">Polish</span><span class="tot-num" id="polishNum">5</span></div>
+          <div class="tot-line"><span class="tot-label" id="sparkleTotLabel">Sparkle</span><span class="tot-num" id="sparkleNum">5</span></div>
         </div>
         <button type="button" id="submitBtn" class="submit">Save score</button>
       </div>
@@ -621,11 +621,11 @@ function catLabel(cat){
   return cat.key;
 }
 function cleanMax(){return state.config.categories.length*2;}
-function polCfg(){return state.config.polish||{};}
-function polMin(){var v=polCfg().min;return typeof v==='number'?v:0;}
-function polMax(){var v=polCfg().max;return typeof v==='number'?v:10;}
-function polDefault(){var v=polCfg()['default'];return typeof v==='number'?v:5;}
-function polLabel(){return (state.config&&state.config.polish&&state.config.polish.label)||'Polish';}
+function sparkCfg(){return state.config.sparkle||{};}
+function sparkMin(){var v=sparkCfg().min;return typeof v==='number'?v:0;}
+function sparkMax(){var v=sparkCfg().max;return typeof v==='number'?v:10;}
+function sparkDefault(){var v=sparkCfg()['default'];return typeof v==='number'?v:5;}
+function sparkLabel(){return (state.config&&state.config.sparkle&&state.config.sparkle.label)||'Sparkle';}
 
 /* ---------- localStorage ---------- */
 function getName(){try{return localStorage.getItem(LS_NAME)||'';}catch(e){return '';}}
@@ -709,13 +709,13 @@ function onConfig(cfg){
   state.config=cfg;
   state.day=loadDay();
   $('cleanMaxEl').textContent='/'+cleanMax();
-  var pc=polCfg();
-  if(pc.label)$('polishLabel').textContent=pc.label;
-  $('polishStepper').setAttribute('aria-label',polLabel()+' score');
-  $('polMinus').setAttribute('aria-label','Decrease '+polLabel().toLowerCase());
-  $('polPlus').setAttribute('aria-label','Increase '+polLabel().toLowerCase());
-  $('polishTotLabel').textContent=polLabel();
-  $('polishHint').textContent=polDefault()+' = met expectations · breaks ties';
+  var pc=sparkCfg();
+  if(pc.label)$('sparkleLabel').textContent=pc.label;
+  $('sparkleStepper').setAttribute('aria-label',sparkLabel()+' score');
+  $('sparkMinus').setAttribute('aria-label','Decrease '+sparkLabel().toLowerCase());
+  $('sparkPlus').setAttribute('aria-label','Increase '+sparkLabel().toLowerCase());
+  $('sparkleTotLabel').textContent=sparkLabel();
+  $('sparkleHint').textContent=sparkDefault()+' = met expectations · breaks ties';
   renderDayRow();
   show('pickerView');
   loadScores();
@@ -868,8 +868,8 @@ function openCabin(code){
     var v=rec?rec[cat.key]:null;
     state.sel[cat.key]=(v==null||v==='')?null:Number(v);
   });
-  var p=rec?rec.polish:null;
-  state.sel.polish=(p==null||p==='')?polDefault():Number(p);
+  var p=rec?rec.sparkle:null;
+  state.sel.sparkle=(p==null||p==='')?sparkDefault():Number(p);
   var savedNotes=(rec&&rec.notes)?String(rec.notes):'';
   var draft=getDraft(state.day,code);
   if(draft){
@@ -877,7 +877,7 @@ function openCabin(code){
       state.config.categories.forEach(function(cat){
         if(draft.sel[cat.key]!=null)state.sel[cat.key]=draft.sel[cat.key];
       });
-      if(draft.sel.polish!=null)state.sel.polish=draft.sel.polish;
+      if(draft.sel.sparkle!=null)state.sel.sparkle=draft.sel.sparkle;
     }
     if(draft.notes!=null)savedNotes=draft.notes;
   }
@@ -912,7 +912,7 @@ function renderForm(){
   });
   $('catRows').innerHTML=html;
   paintAllRows();
-  setPolish(state.sel.polish,true);
+  setSparkle(state.sel.sparkle,true);
   $('allTwosBtn').classList.remove('done');
   updateSubmitBtn();
   updateReadout();
@@ -942,27 +942,27 @@ function cleanSum(){
 }
 function updateReadout(){
   $('cleanNum').textContent=cleanSum();
-  $('polishNum').textContent=state.sel.polish;
+  $('sparkleNum').textContent=state.sel.sparkle;
 }
 function popEl(el){
   el.classList.remove('pop');
   void el.offsetWidth;
   el.classList.add('pop');
 }
-function setPolish(v,silent){
-  var mn=polMin(),mx=polMax();
+function setSparkle(v,silent){
+  var mn=sparkMin(),mx=sparkMax();
   v=Math.round(Number(v));
-  if(isNaN(v))v=polDefault();
+  if(isNaN(v))v=sparkDefault();
   if(v<mn)v=mn;
   if(v>mx)v=mx;
-  state.sel.polish=v;
-  $('polishVal').textContent=v;
-  $('polMinus').disabled=(v<=mn);
-  $('polPlus').disabled=(v>=mx);
+  state.sel.sparkle=v;
+  $('sparkleVal').textContent=v;
+  $('sparkMinus').disabled=(v<=mn);
+  $('sparkPlus').disabled=(v>=mx);
   updateReadout();
   if(!silent){
-    popEl($('polishVal'));
-    popEl($('polishNum'));
+    popEl($('sparkleVal'));
+    popEl($('sparkleNum'));
   }
 }
 function updateSubmitBtn(){
@@ -1024,7 +1024,7 @@ function submit(){
   var rec={
     day:state.day,
     cabin:state.cabin.code,
-    polish:state.sel.polish,
+    sparkle:state.sel.sparkle,
     inspector:name,
     notes:$('notes').value.trim()
   };
@@ -1040,18 +1040,18 @@ function submit(){
 function onSubmitOk(rec,resp){
   state.submitting=false;
   var cleanliness=(resp&&resp.cleanliness!=null)?resp.cleanliness:localClean(rec);
-  var polish=(resp&&resp.polish!=null)?resp.polish:rec.polish;
+  var sparkle=(resp&&resp.sparkle!=null)?resp.sparkle:rec.sparkle;
   var cached={};
   for(var k in rec)cached[k]=rec[k];
   cached.cleanliness=cleanliness;
-  cached.polish=polish;
+  cached.sparkle=sparkle;
   state.scores[rec.cabin]=cached;
   clearDraft(rec.day,rec.cabin);
   var saved=state.cabin;
   var wasEdit=state.editing;
   backToPicker();
   refreshRankings(false);
-  showToast(saved,cleanliness,polish,wasEdit);
+  showToast(saved,cleanliness,sparkle,wasEdit);
 }
 function localClean(rec){
   var t=0;
@@ -1078,7 +1078,7 @@ function breakdownLine(cb){
   var parts=state.config.categories.map(function(cat){
     return esc(catLabel(cat).slice(0,3))+' '+esc(cb[cat.key]);
   });
-  parts.push(polLabel().slice(0,3)+' '+esc(cb.polish));
+  parts.push(sparkLabel().slice(0,3)+' '+esc(cb.sparkle));
   return parts.join(' · ');
 }
 function renderTies(){
@@ -1101,7 +1101,7 @@ function renderTies(){
     html+='<div class="card tie-cluster">'+
       '<div class="tie-head">'+
       '<span class="pill" data-g="'+groupSlug(cl.ageGroup)+'"><span class="dot"></span>'+esc(cl.ageGroup)+'</span>'+
-      '<span class="tie-vals">Cleanliness '+esc(cl.cleanliness)+' · '+polLabel()+' '+esc(cl.polish)+'</span></div>'+
+      '<span class="tie-vals">Cleanliness '+esc(cl.cleanliness)+' · '+sparkLabel()+' '+esc(cl.sparkle)+'</span></div>'+
       '<p class="tie-hint">Tap cabins from best to worst</p>';
     cl.cabins.forEach(function(cb){
       var pos=taps.indexOf(cb.cabin);
@@ -1168,13 +1168,13 @@ function nextUnscored(after){
   }
   return sameGroup||anywhere;
 }
-function showToast(cabin,cleanliness,polish,wasEdit){
+function showToast(cabin,cleanliness,sparkle,wasEdit){
   var t=$('toast');
   var nxt=nextUnscored(cabin);
   var allDone=doneCount()===state.config.cabins.length;
   t.innerHTML='<span class="tick">✓</span>'+
     '<div class="tmsg"><b>'+esc(cabin.code)+'</b> '+(wasEdit?'updated':'saved')+
-    ' · <b>'+esc(cleanliness)+'/'+cleanMax()+'</b> · '+polLabel()+' '+esc(polish)+
+    ' · <b>'+esc(cleanliness)+'/'+cleanMax()+'</b> · '+sparkLabel()+' '+esc(sparkle)+
     (allDone?'<div class="tsub">All '+state.config.cabins.length+' cabins scored. Nice rounds!</div>':'')+
     '</div>'+
     (nxt?'<button type="button" class="tnext" data-code="'+esc(nxt.code)+'">Next: '+esc(nxt.code)+'</button>':'')+
@@ -1245,8 +1245,8 @@ document.addEventListener('DOMContentLoaded',function(){
     popEl($('cleanNum'));
     persistDraft();
   });
-  $('polMinus').addEventListener('click',function(){setPolish(state.sel.polish-1);persistDraft();});
-  $('polPlus').addEventListener('click',function(){setPolish(state.sel.polish+1);persistDraft();});
+  $('sparkMinus').addEventListener('click',function(){setSparkle(state.sel.sparkle-1);persistDraft();});
+  $('sparkPlus').addEventListener('click',function(){setSparkle(state.sel.sparkle+1);persistDraft();});
   $('notes').addEventListener('input',persistDraft);
   $('backBtn').addEventListener('click',backToPicker);
   $('tiesBackBtn').addEventListener('click',backToPicker);

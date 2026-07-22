@@ -8,8 +8,8 @@
  * per (Day, CabinCode).
  *
  * Model: 5 categories (0/1/2) sum to Cleanliness (0..10, primary rank score).
- * Polish (0..10, default 5) is a manual tiebreaker only. Cabins tied on both
- * Cleanliness and Polish form a "cluster" that an inspector resolves manually
+ * Sparkle (0..10, default 5) is a manual tiebreaker only. Cabins tied on both
+ * Cleanliness and Sparkle form a "cluster" that an inspector resolves manually
  * via TieOrder, producing a strict 1..N daily ranking per age group.
  */
 
@@ -29,7 +29,7 @@ var CATEGORIES = [
   {key: "bath",       label: BATH_LABEL,          hint: ""}
 ];
 
-var POLISH = {min: 0, max: 10, "default": 5, label: "Sparkle"};
+var SPARKLE = {min: 0, max: 10, "default": 5, label: "Sparkle"};
 
 // Edit the counts here to change how many cabins each pool has.
 // prefix = [age letter A/B/G][gender letter G/B]; codes are prefix + 1..count.
@@ -47,14 +47,14 @@ var SHEET_NAME = "Scores";
 var HEADERS = [
   "Timestamp", "Day", "CabinCode", "AgeGroup", "Gender",
   "Floors", "Beds", "Belongings", "Trash", "Bath",
-  "Polish", "Cleanliness", "TieOrder", "Inspector", "Notes"
+  "Sparkle", "Cleanliness", "TieOrder", "Inspector", "Notes"
 ];
 
 // 0-based column offsets into a Scores data row (matches HEADERS order).
 var COL = {
   timestamp: 0, day: 1, cabin: 2, ageGroup: 3, gender: 4,
   floors: 5, beds: 6, belongings: 7, trash: 8, bath: 9,
-  polish: 10, cleanliness: 11, tieOrder: 12, inspector: 13, notes: 14
+  sparkle: 10, cleanliness: 11, tieOrder: 12, inspector: 13, notes: 14
 };
 
 
@@ -159,7 +159,7 @@ function rowToObject_(r) {
     belongings: toNum_(r[COL.belongings]),
     trash: toNum_(r[COL.trash]),
     bath: toNum_(r[COL.bath]),
-    polish: toNum_(r[COL.polish]),
+    sparkle: toNum_(r[COL.sparkle]),
     cleanliness: toNum_(r[COL.cleanliness]),
     tieOrder: isBlank_(tie) ? null : toNum_(tie),
     inspector: r[COL.inspector] || "",
@@ -235,7 +235,7 @@ function getConfig() {
     cabins: CABINS,
     ageGroups: AGE_GROUPS,
     bathLabel: BATH_LABEL,
-    polish: {min: POLISH.min, max: POLISH.max, "default": POLISH["default"], label: POLISH.label}
+    sparkle: {min: SPARKLE.min, max: SPARKLE.max, "default": SPARKLE["default"], label: SPARKLE.label}
   };
 }
 
@@ -259,9 +259,9 @@ function submitScore(rec) {
   var trash = validateInt_("Trash", rec.trash, 0, 2);
   var bath = validateInt_("Bath", rec.bath, 0, 2);
 
-  // Polish has a documented default; a blank submission falls back to it.
-  var polishRaw = isBlank_(rec.polish) ? POLISH["default"] : rec.polish;
-  var polish = validateInt_("Polish", polishRaw, POLISH.min, POLISH.max);
+  // Sparkle has a documented default; a blank submission falls back to it.
+  var sparkleRaw = isBlank_(rec.sparkle) ? SPARKLE["default"] : rec.sparkle;
+  var sparkle = validateInt_("Sparkle", sparkleRaw, SPARKLE.min, SPARKLE.max);
 
   var cleanliness = floors + beds + belongings + trash + bath;
   var inspector = (rec.inspector == null) ? "" : String(rec.inspector).trim();
@@ -275,11 +275,11 @@ function submitScore(rec) {
     var rowIndex = findRowIndex_(sheet, day, cabin.code);
 
     // Preserve an existing manual TieOrder only when neither Cleanliness nor
-    // Polish changed; otherwise the cluster may differ, so clear it.
+    // Sparkle changed; otherwise the cluster may differ, so clear it.
     var tieOrderValue = "";
     if (rowIndex > 0) {
       var existing = sheet.getRange(rowIndex, 1, 1, HEADERS.length).getValues()[0];
-      var unchanged = (toNum_(existing[COL.polish]) === polish) &&
+      var unchanged = (toNum_(existing[COL.sparkle]) === sparkle) &&
                       (toNum_(existing[COL.cleanliness]) === cleanliness);
       if (unchanged && !isBlank_(existing[COL.tieOrder])) {
         tieOrderValue = existing[COL.tieOrder];
@@ -289,7 +289,7 @@ function submitScore(rec) {
     var rowValues = [
       new Date(), day, cabin.code, cabin.ageGroup, cabin.gender,
       floors, beds, belongings, trash, bath,
-      polish, cleanliness, tieOrderValue, inspector, notes
+      sparkle, cleanliness, tieOrderValue, inspector, notes
     ];
 
     if (rowIndex > 0) {
@@ -301,7 +301,7 @@ function submitScore(rec) {
     lock.releaseLock();
   }
 
-  return {ok: true, cleanliness: cleanliness, polish: polish, day: day, cabin: cabin.code};
+  return {ok: true, cleanliness: cleanliness, sparkle: sparkle, day: day, cabin: cabin.code};
 }
 
 function validateInt_(name, v, min, max) {
@@ -354,7 +354,7 @@ function rankDay_(ageGroup, rows) {
     winner = {
       cabin: top.cabin,
       cleanliness: top.cleanliness,
-      polish: top.polish,
+      sparkle: top.sparkle,
       winnerProvisional: (top.inTie && !top.tieResolved)
     };
   }
@@ -390,11 +390,11 @@ function getRankings(day) {
   };
 }
 
-// Strict order: Cleanliness desc, Polish desc, manual TieOrder asc (a set
+// Strict order: Cleanliness desc, Sparkle desc, manual TieOrder asc (a set
 // TieOrder beats an unset one), then cabin code asc as a provisional fallback.
 function compareRanking_(a, b) {
   if (b.cleanliness !== a.cleanliness) return b.cleanliness - a.cleanliness;
-  if (b.polish !== a.polish) return b.polish - a.polish;
+  if (b.sparkle !== a.sparkle) return b.sparkle - a.sparkle;
   var at = a.tieOrder, bt = b.tieOrder;
   if (at !== null && bt !== null && at !== bt) return at - bt;
   if (at !== null && bt === null) return -1;
@@ -409,7 +409,7 @@ function compareRanking_(a, b) {
 function annotateGroup_(list) {
   var clusters = {};
   list.forEach(function (r) {
-    var key = r.cleanliness + "|" + r.polish;
+    var key = r.cleanliness + "|" + r.sparkle;
     (clusters[key] = clusters[key] || []).push(r);
   });
 
@@ -436,7 +436,7 @@ function annotateGroup_(list) {
 }
 
 function sameCluster_(a, b) {
-  return a.cleanliness === b.cleanliness && a.polish === b.polish;
+  return a.cleanliness === b.cleanliness && a.sparkle === b.sparkle;
 }
 
 // True when index i is the first (provisional-lead) member of its cluster.
@@ -456,14 +456,14 @@ function clusterFor_(ageGroup, list, startIndex) {
       belongings: c.belongings,
       trash: c.trash,
       bath: c.bath,
-      polish: c.polish,
+      sparkle: c.sparkle,
       notes: c.notes
     });
   }
   return {
     ageGroup: ageGroup,
     cleanliness: lead.cleanliness,
-    polish: lead.polish,
+    sparkle: lead.sparkle,
     cabins: cabins
   };
 }
@@ -507,7 +507,7 @@ function setTieOrder(day, ageGroup, orderedCabinCodes) {
         rowByCode[v[COL.cabin]] = {
           rowIndex: i + 2,
           cleanliness: toNum_(v[COL.cleanliness]),
-          polish: toNum_(v[COL.polish])
+          sparkle: toNum_(v[COL.sparkle])
         };
       }
     }
@@ -518,8 +518,8 @@ function setTieOrder(day, ageGroup, orderedCabinCodes) {
       if (!info) throw new Error("Cabin " + c + " has no score for " + day + ".");
       if (ref === null) {
         ref = info;
-      } else if (info.cleanliness !== ref.cleanliness || info.polish !== ref.polish) {
-        throw new Error("Cabins are not a real tie (they differ on Cleanliness or Polish).");
+      } else if (info.cleanliness !== ref.cleanliness || info.sparkle !== ref.sparkle) {
+        throw new Error("Cabins are not a real tie (they differ on Cleanliness or Sparkle).");
       }
     });
 

@@ -177,10 +177,10 @@ kbd{font-family:var(--sans);font-size:.85em;padding:.1em .45em;border:1px solid 
 .board tr.win td:first-child{box-shadow:inset 3px 0 0 var(--g)}
 .board tr.tb td{background:color-mix(in srgb,var(--accent-yellow) 8%,transparent)}
 .board tr.tb td.rk{color:var(--accent-yellow);font-weight:600}
-.board td.polcol{font-family:var(--sans);font-size:.85rem}
-.board td.polcol.mut{color:var(--text-muted)}
+.board td.sparkcol{font-family:var(--sans);font-size:.85rem}
+.board td.sparkcol.mut{color:var(--text-muted)}
 .board .tbnote{padding:.5rem 1rem 0;font-family:var(--sans);font-size:.68rem;color:var(--accent-yellow)}
-.cell.pol{color:var(--text-primary)}
+.cell.spark{color:var(--text-primary)}
 .awaiting{padding:.55rem 1rem .8rem;font-family:var(--sans);font-size:.72rem;color:var(--text-muted)}
 .boardempty{padding:1.6rem 1rem;text-align:center;color:var(--text-muted);font-size:.92rem}
 
@@ -248,7 +248,7 @@ svg text{font-family:var(--sans)}
 .daydim{opacity:.45}
 .lbl{fill:var(--text-primary);font-weight:600}
 .val{fill:var(--text-primary);font-weight:600}
-.pol{fill:var(--text-muted);font-family:var(--sans)}
+.spark{fill:var(--text-muted);font-family:var(--sans)}
 .tbmark{fill:var(--accent-yellow);font-weight:700}
 .mark{fill:var(--g)}
 .crown{fill:var(--g)}
@@ -642,11 +642,11 @@ function catCols(){
 function cellHtml(v,label){
   return '<span class="cell'+(v?' v'+Math.min(v,2):'')+'" title="'+esc(label)+': '+v+' of 2">'+v+'</span>';
 }
-function polDef(){
-  return (config&&config.polish&&typeof config.polish['default']==='number')?config.polish['default']:5;
+function sparkDef(){
+  return (config&&config.sparkle&&typeof config.sparkle['default']==='number')?config.sparkle['default']:5;
 }
-function polLabel(){
-  return (config&&config.polish&&config.polish.label)||'Polish';
+function sparkLabel(){
+  return (config&&config.sparkle&&config.sparkle.label)||'Sparkle';
 }
 function isUnresolved(r){
   return !!(r&&r.inTie&&!r.tieResolved);
@@ -968,9 +968,9 @@ function clusterFor(gName,w,rows){
   }
   var r1=rows[0];
   if(r1&&isUnresolved(r1)){
-    return {ageGroup:gName,cleanliness:r1.cleanliness,polish:r1.polish,
+    return {ageGroup:gName,cleanliness:r1.cleanliness,sparkle:r1.sparkle,
       cabins:rows.filter(function(r){
-        return isUnresolved(r)&&r.cleanliness===r1.cleanliness&&r.polish===r1.polish;
+        return isUnresolved(r)&&r.cleanliness===r1.cleanliness&&r.sparkle===r1.sparkle;
       })};
   }
   return null;
@@ -992,10 +992,10 @@ function renderWinners(){
         return '<span class="tiechip">'+esc(c.cabin)+'</span>';
       }).join('');
       var cln=cl.cleanliness!=null?cl.cleanliness:r1.cleanliness;
-      var pol=cl.polish!=null?cl.polish:r1.polish;
+      var spark=cl.sparkle!=null?cl.sparkle:r1.sparkle;
       body='<div><span class="tiebadge warn">Pending tiebreak &middot; '+cln+'/10</span></div>'+
         '<div class="tiechips">'+chips+'</div>'+
-        '<p class="tienote">Tied on cleanliness and '+esc(polLabel().toLowerCase())+' ('+pol+'). '+
+        '<p class="tienote">Tied on cleanliness and '+esc(sparkLabel().toLowerCase())+' ('+spark+'). '+
         'The inspector sets the final order from the entry page.</p>';
     }else{
       var r=r1;
@@ -1010,10 +1010,10 @@ function renderWinners(){
       else if(r.inspector){note='<div class="wnote">Inspected by '+esc(r.inspector)+'</div>';}
       body='<div class="wmain"><span class="wcabin">'+esc(r.cabin)+'</span>'+
         '<span class="wscore"><b>'+r.cleanliness+'</b><span>/10</span></span></div>'+
-        '<div class="wsub">'+gender+' cabin &middot; '+esc(polLabel())+' '+r.polish+'</div>'+
+        '<div class="wsub">'+gender+' cabin &middot; '+esc(sparkLabel())+' '+r.sparkle+'</div>'+
         '<div class="cells">'+breakdownCells(r,false)+
-        '<span class="cellblk"><span class="cell pol" title="'+esc(polLabel())+': '+r.polish+' of 10">'+r.polish+'</span>'+
-        '<small>'+esc(polLabel())+'</small></span></div>'+note;
+        '<span class="cellblk"><span class="cell spark" title="'+esc(sparkLabel())+': '+r.sparkle+' of 10">'+r.sparkle+'</span>'+
+        '<small>'+esc(sparkLabel())+'</small></span></div>'+note;
     }
     return '<article class="wcard '+gc+'" aria-label="'+esc(gName)+' cabin of the day">'+
       '<div class="whead"><svg class="trophy" aria-hidden="true"><use href="#i-crown"/></svg>'+
@@ -1072,9 +1072,9 @@ function heroCardHtml(r){
     return '<div class="hc-cat"><div class="cell v'+Math.min(v,2)+'" title="'+esc(lbl)+': '+v+' of 2">'+HERO_ICONS[key]+'</div>'+
       '<span class="hc-cat-label">'+esc(shortLbl)+'</span></div>';
   }).join('');
-  var sparkle='<div class="hc-sparkle" title="'+esc(polLabel())+': '+r.polish+' of 10">'+
+  var sparkle='<div class="hc-sparkle" title="'+esc(sparkLabel())+': '+r.sparkle+' of 10">'+
     '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l1.8 5.6L19 9l-5.2 1.4L12 16l-1.8-5.6L5 9l5.2-1.4z"/></svg>'+
-    '<span>'+r.polish+'</span></div>';
+    '<span>'+r.sparkle+'</span></div>';
   return '<article class="herocard'+(unres?' tb':'')+'" data-rank="'+r.rank+'">'+
     '<div class="hc-top"><span class="hc-code">'+esc(r.cabin)+'</span>'+
     '<span class="hc-rank">'+medal+esc(ordinal(r.rank))+'</span></div>'+
@@ -1119,7 +1119,7 @@ function renderEmceeBoard(){
     return '<article class="emceerow'+(unres?' tb':'')+'">'+
       '<div class="er-top"><span class="er-rank">'+(unres?'~':'')+'#'+r.rank+'</span>'+
       '<span class="er-cabin">'+esc(r.cabin)+'</span>'+
-      '<span class="er-score">'+r.cleanliness+'/10 &middot; '+esc(polLabel())+' '+r.polish+'</span></div>'+
+      '<span class="er-score">'+r.cleanliness+'/10 &middot; '+esc(sparkLabel())+' '+r.sparkle+'</span></div>'+
       '<div class="er-cells">'+breakdownCells(r,false)+'</div>'+
       inspector+notes+'</article>';
   }).join('');
@@ -1139,14 +1139,14 @@ function boardTableHtml(rows,awaiting,gName){
     return '<tr'+cls+'><td class="rk">'+(unres?'~':'')+rk+'</td>'+
       '<td class="cb">'+esc(r.cabin)+'</td>'+
       breakdownCells(r,true)+
-      '<td class="polcol'+(r.polish===polDef()?' mut':'')+'" title="'+esc(polLabel())+' (tiebreaker)">'+r.polish+'</td>'+
+      '<td class="sparkcol'+(r.sparkle===sparkDef()?' mut':'')+'" title="'+esc(sparkLabel())+' (tiebreaker)">'+r.sparkle+'</td>'+
       '<td class="tot">'+r.cleanliness+'<span>/10</span></td></tr>';
   }).join('');
   var ths=catCols().map(function(c){
     return '<th title="'+esc(c.label)+'">'+esc(c.abbr)+'</th>';
   }).join('');
   var inner='<table><thead><tr><th></th><th class="tl">Cabin</th>'+ths+
-    '<th title="'+esc(polLabel())+' (tiebreaker)">'+esc(polLabel())+'</th><th title="Cleanliness">Clean</th></tr></thead><tbody>'+trs+'</tbody></table>';
+    '<th title="'+esc(sparkLabel())+' (tiebreaker)">'+esc(sparkLabel())+'</th><th title="Cleanliness">Clean</th></tr></thead><tbody>'+trs+'</tbody></table>';
   if(hasUnresolved){
     inner+='<div class="tbnote">~ tied: order is provisional until the inspector breaks the tie</div>';
   }
@@ -1220,7 +1220,7 @@ function colPathV(x,y,w,h,r){
 function renderBarChart(){
   var wrap=el('barChart');
   if(!rank)return;
-  el('chartSub').textContent=currentGroup+"'s scored cabins on "+fullDay(rank.day)+', cleanest first · cleanliness out of 10 · p# = '+polLabel().toLowerCase();
+  el('chartSub').textContent=currentGroup+"'s scored cabins on "+fullDay(rank.day)+', cleanest first · cleanliness out of 10 · s# = '+sparkLabel().toLowerCase();
   var rows=groupRows(currentGroup).slice(0,countFor(currentDay,currentGroup));
   if(!rows.length){
     wrap.innerHTML='<div class="chartempty">No inspections logged yet for '+esc(fullDay(rank.day))+'. Cleanliness scores appear here as they come in.</div>';
@@ -1249,8 +1249,8 @@ function renderBarChart(){
     s+='<text class="val" x="'+vx+'" y="'+(cy+5)+'" font-size="14">'+r.cleanliness+'</text>';
     var cw=r.cleanliness>=10?20:11;
     var px=vx+cw+6;
-    s+='<text class="pol" x="'+px+'" y="'+(cy+4.5)+'" font-size="10">p'+r.polish+'</text>';
-    var pw=r.polish>=10?21:15;
+    s+='<text class="spark" x="'+px+'" y="'+(cy+4.5)+'" font-size="10">s'+r.sparkle+'</text>';
+    var pw=r.sparkle>=10?21:15;
     if(r.rank===1&&!isUnresolved(r)){
       s+='<use href="#i-crown" class="crown '+gc+'" x="'+(px+pw+4)+'" y="'+(cy-7)+'" width="14" height="14"/>';
     }else if(r.rank===1&&isUnresolved(r)){
