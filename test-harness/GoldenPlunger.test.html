@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Golden Plunger &mdash; Cleanest Cabin</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --bg-page:#0b0f17;
+  --bg-card:#121820;
+  --bg-code:#0d1219;
+  --border:#1e2d42;
+  --border-subtle:#182030;
+  --cyan:#00c8e6;
+  --cyan-dim:#2596b3;
+  --cyan-glow:rgba(0,200,230,0.12);
+  --text-primary:#dde4ef;
+  --text-secondary:#7a90aa;
+  --text-muted:#7488a1;
+  --accent-yellow:#f5a623;
+  --alpha:#f26a6a;
+  --beta:#5aa2ff;
+  --gamma:#34d17f;
+  --medal-gold:#f5c518;
+  --medal-silver:#c8ccd6;
+  --medal-bronze:#c97a3a;
+  --radius:10px;
+  --sans:'Poppins',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Consolas,monospace;
+}
+.g-alpha{--g:var(--alpha)}
+.g-beta{--g:var(--beta)}
+.g-gamma{--g:var(--gamma)}
+.g-none{--g:var(--text-muted)}
+
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+html{font-size:16px;background:var(--bg-page);color-scheme:dark}
+body{background:var(--bg-page);color:var(--text-primary);font:400 1rem/1.5 var(--sans);
+  -webkit-font-smoothing:antialiased;min-height:100dvh;overflow-x:hidden}
+
+.bunting{display:block;width:100%;height:16px;flex:0 0 auto}
+.p-a{fill:var(--alpha)}
+.p-b{fill:var(--beta)}
+.p-c{fill:var(--gamma)}
+
+.plunger-svg{overflow:visible}
+
+.page{display:flex;flex-direction:column;min-height:100dvh}
+
+/* ---------- header ---------- */
+.top{display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  padding:.9rem clamp(1rem,3vw,2.5rem) .6rem}
+.brand{display:flex;align-items:center;gap:.85rem;min-width:0}
+.brand .cabin-icon{width:clamp(2rem,3.5vw,2.9rem);height:clamp(2rem,3.5vw,2.9rem);fill:var(--cyan);flex:0 0 auto}
+.brand h1{font-size:clamp(1.2rem,2.2vw,1.9rem);font-weight:800;line-height:1.05;letter-spacing:-.01em}
+.brand .tagline{font-family:var(--mono);color:var(--cyan);font-size:clamp(.6rem,1vw,.75rem);font-weight:600;
+  letter-spacing:.18em;text-transform:uppercase;margin-top:.2rem}
+
+/* ---------- day heading ---------- */
+.dayhead{text-align:center;padding:.2rem 1rem .4rem}
+.dayhead h2{font-size:clamp(2rem,5.8vw,7rem);font-weight:800;letter-spacing:-.01em;line-height:1.05}
+.dayhead h2 em{font-style:normal;color:var(--medal-gold)}
+
+/* ---------- stage (three award cards) ---------- */
+.stage{flex:1 1 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(.8rem,1.6vw,1.4rem);
+  align-items:stretch;padding:.3rem clamp(1rem,3vw,2.5rem) .5rem;min-height:0}
+
+.award{position:relative;background:var(--bg-card);border:1px solid var(--border);border-top:6px solid var(--g);
+  border-radius:var(--radius);padding:clamp(.8rem,1.4vw,1.3rem) clamp(1rem,1.8vw,1.6rem);
+  display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.award.prov{border-top-style:dashed;border-top-color:var(--accent-yellow)}
+.award-head{display:flex;align-items:center;gap:.5rem;flex:0 0 auto;margin-bottom:.4rem}
+.award-head .gname{font-weight:800;font-size:clamp(1.3rem,2.6vw,3.2rem);color:var(--g);letter-spacing:.01em}
+.award-head .award-tag{margin-left:auto;font-family:var(--mono);font-size:clamp(.85rem,1.3vw,1.6rem);font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--text-secondary);text-align:right;line-height:1.2}
+
+.award-body{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:clamp(.35rem,1vh,.9rem);min-height:0;text-align:center}
+
+.plunger{width:clamp(5rem,15vh,10rem);aspect-ratio:889/500;height:auto;flex:0 0 auto;
+  filter:drop-shadow(0 6px 14px rgba(0,0,0,.35))}
+.plunger.dim{opacity:.32;filter:none}
+
+.win-cabin{font-family:var(--mono);font-weight:800;font-size:clamp(2.6rem,7vw,8rem);line-height:.95;
+  letter-spacing:.01em;color:var(--text-primary)}
+.win-score{display:flex;align-items:baseline;gap:.4rem;font-family:var(--sans)}
+.win-score b{font-size:clamp(1.6rem,3.2vw,3.8rem);font-weight:800;color:var(--g);line-height:1}
+.win-score span{font-size:clamp(1rem,1.7vw,2.2rem);color:var(--text-secondary);font-weight:600}
+.citation{font-style:italic;color:var(--text-primary);font-size:clamp(1.1rem,2vw,2.4rem);line-height:1.3;
+  max-width:28ch;margin-top:.1rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden}
+
+/* provisional / tie badge */
+.badge{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--mono);font-weight:600;
+  font-size:clamp(.75rem,1.05vw,1.3rem);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;
+  color:var(--accent-yellow);background:color-mix(in srgb,var(--accent-yellow) 12%,transparent);
+  border:1px solid color-mix(in srgb,var(--accent-yellow) 45%,transparent);
+  padding:.3rem .7rem;border-radius:999px}
+.badge svg{width:1em;height:1em;fill:var(--accent-yellow)}
+
+/* empty-division placeholder */
+.award-body.empty{gap:.6rem}
+.empty-title{font-weight:700;font-size:clamp(1.6rem,3vw,3.6rem);color:var(--text-primary)}
+.empty-sub{color:var(--text-secondary);font-size:clamp(1.1rem,2vw,2.6rem);max-width:24ch}
+
+/* ---------- whole-page waiting splash ---------- */
+.splash{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:.7rem;text-align:center;padding:1.2rem 1.5rem}
+.splash .plunger{width:clamp(7rem,18vh,13rem);aspect-ratio:889/500;height:auto;animation:bob 3s ease-in-out infinite}
+.splash h2{font-size:clamp(2.2rem,6.8vw,8rem);font-weight:800;letter-spacing:-.01em;line-height:1.12}
+.splash h2 em{font-style:normal;color:var(--medal-gold)}
+.splash p{color:var(--text-primary);font-size:clamp(1.3rem,2.9vw,3.5rem);line-height:1.3;max-width:46ch}
+.splash .kicker{font-family:var(--mono);color:var(--accent-yellow);font-size:clamp(1rem,1.6vw,2rem);
+  font-weight:600;letter-spacing:.24em;text-transform:uppercase}
+
+/* ---------- footer ---------- */
+footer{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:1.1rem;flex-wrap:wrap;
+  color:var(--text-muted);font-size:.82rem;padding:.5rem 1rem calc(.6rem + env(safe-area-inset-bottom))}
+.live{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.72rem;font-weight:600;
+  letter-spacing:.12em;color:var(--cyan)}
+.live i{width:9px;height:9px;border-radius:50%;background:var(--cyan);animation:pulse 1.6s ease-in-out infinite}
+.stamp{font-family:var(--mono);color:var(--text-muted);font-size:.78rem}
+
+/* ---------- reconnecting pill ---------- */
+.reconnect{position:fixed;bottom:1rem;right:1rem;z-index:40;display:inline-flex;align-items:center;gap:.5rem;
+  font-family:var(--mono);font-size:.75rem;font-weight:600;letter-spacing:.06em;
+  color:var(--accent-yellow);background:var(--bg-card);
+  border:1px solid color-mix(in srgb,var(--accent-yellow) 45%,transparent);
+  border-radius:999px;padding:.4rem .85rem;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+.reconnect .spin{width:12px;height:12px;border-radius:50%;border:2px solid color-mix(in srgb,var(--accent-yellow) 30%,transparent);
+  border-top-color:var(--accent-yellow);animation:whirl .8s linear infinite}
+
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes whirl{to{transform:rotate(360deg)}}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-12px) rotate(2deg)}}
+@keyframes reveal{0%{opacity:0;transform:translateY(16px) scale(.96)}60%{transform:translateY(-5px) scale(1.012)}100%{opacity:1;transform:none}}
+@keyframes plunge{0%{transform:translateY(-14px) rotate(-6deg)}45%{transform:translateY(6px) rotate(1deg)}70%{transform:translateY(-2px)}100%{transform:none}}
+.award.reveal{animation:reveal .7s cubic-bezier(.2,.8,.2,1)}
+.award.reveal .plunger{animation:plunge .75s ease}
+
+/* ---------- responsive: stack on narrow / portrait ---------- */
+@media (max-width:900px){
+  body{overflow-y:auto}
+  .stage{grid-template-columns:1fr;padding-bottom:1.5rem}
+  .award{min-height:14rem}
+  .win-cabin{font-size:clamp(3rem,16vw,5rem)}
+}
+@media (min-width:1600px){
+  html{font-size:19px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .award.reveal,.award.reveal .plunger,.live i,.splash .plunger,.reconnect .spin{animation:none!important}
+}
+@media (forced-colors:active){
+  .award{border:1px solid ButtonText;border-top-width:6px}
+  .badge,.reconnect,.live i{border:1px solid ButtonText}
+}
+</style>
+<script src="mock-gs.js"></script>
+<script>
+document.documentElement.setAttribute('data-theme','smartos-dark');
+</script>
+</head>
+<body>
+<svg class="bunting" aria-hidden="true" focusable="false">
+  <defs>
+    <pattern id="pennants" width="84" height="16" patternUnits="userSpaceOnUse">
+      <path class="p-a" d="M2 0h24L14 14Z"/>
+      <path class="p-b" d="M30 0h24L42 14Z"/>
+      <path class="p-c" d="M58 0h24L70 14Z"/>
+    </pattern>
+  </defs>
+  <rect width="100%" height="16" fill="url(#pennants)"/>
+</svg>
+
+<div class="page">
+  <header class="top">
+    <div class="brand">
+      <svg class="cabin-icon" aria-hidden="true"><use href="#i-cabin"/></svg>
+      <div>
+        <h1>The Golden Plunger</h1>
+        <p class="tagline">Cleanest Cabin &middot; Award of the Day</p>
+      </div>
+    </div>
+  </header>
+
+  <div id="statusLive" class="dayhead" aria-live="polite" hidden>
+    <h2 id="dayTitle"></h2>
+    <p id="srSummary" class="sr-only"></p>
+  </div>
+
+  <main id="stage" class="stage" aria-label="Golden Plunger winners by age division" hidden></main>
+
+  <section id="splash" class="splash" aria-live="polite">
+    <svg class="plunger plunger-svg" viewBox="0 0 889 500" aria-hidden="true">
+      <path class="pl-handle" d="M443.94,32.13h.52c13.75,0,20.16,12.97,20.16,20.49v270.01h-41.2V52.62c0-11.32,9.67-20.49,20.52-20.49Z" fill="#a77448" stroke="#000" stroke-width="4.7"/>
+      <path class="pl-cup" d="M540.77,440.31h-.94c0-36.59-21.21-66.46-49.68-75.41l-13.65-5.72v-24.42c0-7.81-5.88-10.67-12.03-10.67h-37.57c-7.78,0-13.2,5.12-13.2,11.25v23.84l-8.84,4.14c-29.93,10.41-57.32,36.38-57.32,76.99h-2.26c-9.8,0-13.18,6.6-13.18,13.41,0,8.55,5.7,12.71,13.37,12.71h196.67c9.12,0,13.58-7.48,13.58-11.81,0-7.71-4.46-14.31-14.86-14.31h-.09Z" fill="#fbcc34" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="4.7"/>
+      <path d="M412.54,381.65c-17.64,6.49-31.97,20.91-37.65,37.36" fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"/>
+      <path d="M345.45,440.31h142.9" fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"/>
+      <path d="M474.8194,440.31h66.3106" fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"/>
+      <path d="M414.23,357.39c10.23-2.55,17.3-1.93,28.15-1.93" fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"/>
+    </svg>
+    <div class="kicker">The Golden Plunger</div>
+    <h2>Awaiting today&rsquo;s <em>champions</em></h2>
+    <p id="splashBlurb">Every cabin already got the once-over today: inspectors done, clipboards full. Somewhere behind the scenes, scores are being tallied, and one very tidy bunk is about to claim a slightly damp trophy.</p>
+  </section>
+
+  <footer>
+    <span class="live" aria-hidden="true"><i></i>LIVE</span>
+    <span class="stamp" id="stamp">warming up the trophy&hellip;</span>
+    <span aria-hidden="true">&middot;</span>
+    <span>Auto-refreshes every 15 seconds. Leave it running.</span>
+  </footer>
+</div>
+
+<div id="reconnect" class="reconnect" role="status" hidden>
+  <span class="spin" aria-hidden="true"></span><span>Reconnecting&hellip;</span>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-cabin" viewBox="0 0 24 24">
+    <path fill-rule="evenodd" d="M12 3 3 12v9h18v-9ZM10 21v-6h4v6ZM3.6 13.1h16.8v1h-16.8ZM3.6 17.5h6v1h-6ZM14.4 17.5h6v1h-6Z"/>
+    <circle cx="2.3" cy="13.5" r="1.15"/>
+    <circle cx="2.3" cy="18" r="1.15"/>
+    <circle cx="21.7" cy="13.5" r="1.15"/>
+    <circle cx="21.7" cy="18" r="1.15"/>
+  </symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24">
+    <path d="M12 2 1 21h22L12 2Zm0 6c.7 0 1.2.6 1.1 1.3l-.4 5a.7.7 0 0 1-1.4 0l-.4-5A1.1 1.1 0 0 1 12 8Zm0 9.2a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z"/>
+  </symbol>
+</svg>
+
+<script>
+(function(){
+'use strict';
+
+var POLL_MS=15000;
+var GROUPS=['Alpha','Beta','Gamma'];
+var GROUP_CLS={Alpha:'g-alpha',Beta:'g-beta',Gamma:'g-gamma'};
+var DAY_FULL={Tue:'Tuesday',Wed:'Wednesday',Thu:'Thursday',Fri:'Friday'};
+
+var GENERIC_BLURB='Every cabin already got the once-over today: inspectors done, clipboards full. '+
+  'Somewhere behind the scenes, scores are being tallied, and one very tidy bunk is about to claim a slightly damp trophy.';
+var DAY_BLURB={
+  Tue:'Day one’s inspections are already done, whether your socks agree or not. '+
+    'Scores are being tallied now: the week’s first champions are moments away.',
+  Wed:'Wednesday’s rounds wrapped hours ago, and the competition is heating up. '+
+    'Somewhere, a calculator is smoking and a cabin is about to be crowned.',
+  Thu:'Thursday’s inspections are in the books. One day of glory left to grab, '+
+    'and the tallying is already underway backstage.',
+  Fri:'This is it: the final inspection of the whole week. Every cabin has been judged, '+
+    'and the season’s ultimate champions are about to be revealed.'
+};
+function splashBlurbText(){
+  var wd=new Date().toLocaleDateString('en-US',{weekday:'short'});
+  return DAY_BLURB[wd]||GENERIC_BLURB;
+}
+
+var CITATIONS=[
+  'Floors so clean you could eat breakfast off them (please don’t).',
+  'A spotless victory, sealed with a single glorious plunge.',
+  'Beds tucked, trash gone, glory earned.',
+  'The tidiest bunk in all the land bows to no dust bunny.',
+  'Inspectors wept. Mops rejoiced. This cabin reigns supreme.',
+  'Not a sock out of place. Absolute legends.',
+  'Gleaming corners, made beds, and a whole lot of pride.',
+  'Cleanliness royalty, crowned in gleaming rubber and glory.',
+  'The dust bunnies have officially surrendered.',
+  'Sweeping the competition, one swept floor at a time.',
+  'So fresh, so clean, so deserving of this majestic plunger.',
+  'Where mess fears to tread. All hail the champions.'
+];
+
+var lastJSON='';
+var shownCabin={Alpha:null,Beta:null,Gamma:null};
+var pollTimer=null,fetching=false;
+
+function el(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function fullDay(d){return DAY_FULL[d]||d;}
+function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function plungerSvg(dim){
+  return '<svg class="plunger plunger-svg'+(dim?' dim':'')+'" viewBox="0 0 889 500" aria-hidden="true">'+
+    '<path class="pl-handle" d="M443.94,32.13h.52c13.75,0,20.16,12.97,20.16,20.49v270.01h-41.2V52.62c0-11.32,9.67-20.49,20.52-20.49Z" fill="#a77448" stroke="#000" stroke-width="4.7"/>'+
+    '<path class="pl-cup" d="M540.77,440.31h-.94c0-36.59-21.21-66.46-49.68-75.41l-13.65-5.72v-24.42c0-7.81-5.88-10.67-12.03-10.67h-37.57c-7.78,0-13.2,5.12-13.2,11.25v23.84l-8.84,4.14c-29.93,10.41-57.32,36.38-57.32,76.99h-2.26c-9.8,0-13.18,6.6-13.18,13.41,0,8.55,5.7,12.71,13.37,12.71h196.67c9.12,0,13.58-7.48,13.58-11.81,0-7.71-4.46-14.31-14.86-14.31h-.09Z" fill="#fbcc34" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="4.7"/>'+
+    '<path d="M412.54,381.65c-17.64,6.49-31.97,20.91-37.65,37.36" fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"/>'+
+    '<path d="M345.45,440.31h142.9" fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"/>'+
+    '<path d="M474.8194,440.31h66.3106" fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"/>'+
+    '<path d="M414.23,357.39c10.23-2.55,17.3-1.93,28.15-1.93" fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"/></svg>';
+}
+
+function stampUpdated(){
+  el('stamp').textContent='updated '+new Date().toLocaleTimeString('en-GB',{hour12:false});
+}
+function setReconnecting(on){el('reconnect').hidden=!on;}
+
+function scheduleNext(ms){
+  clearTimeout(pollTimer);
+  pollTimer=setTimeout(fetchData,ms);
+}
+
+function fetchData(){
+  if(fetching)return;
+  fetching=true;
+  google.script.run
+    .withSuccessHandler(function(data){
+      fetching=false;
+      setReconnecting(false);
+      onData(data);
+      scheduleNext(POLL_MS);
+    })
+    .withFailureHandler(function(){
+      fetching=false;
+      // Keep last-good data on screen; just flag a quiet reconnect and retry.
+      setReconnecting(true);
+      scheduleNext(POLL_MS);
+    })
+    .getGoldenPlungerData();
+}
+
+function onData(data){
+  if(!data){return;}
+  stampUpdated();
+  var j=JSON.stringify(data);
+  if(j===lastJSON)return;
+  lastJSON=j;
+  render(data);
+}
+
+function triggerReveal(node){
+  node.classList.remove('reveal');
+  void node.offsetWidth;
+  node.classList.add('reveal');
+}
+
+function badgeHtml(){
+  return '<div class="badge"><svg aria-hidden="true"><use href="#i-alert"/></svg>Photo finish &middot; recount pending</div>';
+}
+
+function cardInner(g,w){
+  var head='<div class="award-head"><span class="gname">'+esc(g)+'</span>'+
+    '<span class="award-tag">Golden Plunger</span></div>';
+  if(!w){
+    return head+
+      '<div class="award-body empty">'+
+      plungerSvg(true)+
+      '<div class="empty-title">No entries yet today</div>'+
+      '<div class="empty-sub">The inspectors haven’t reached the '+esc(g)+' cabins. Check back soon!</div>'+
+      '</div>';
+  }
+  var prov=w.winnerProvisional?badgeHtml():'';
+  return head+
+    '<div class="award-body">'+prov+
+    plungerSvg(false)+
+    '<div class="win-cabin">'+esc(w.cabin)+'</div>'+
+    '<div class="win-score"><b>'+esc(w.cleanliness)+'</b><span>/10 clean</span></div>'+
+    '<p class="citation">'+esc(pick(CITATIONS))+'</p>'+
+    '</div>';
+}
+
+function render(data){
+  var day=data&&data.day;
+  var status=el('statusLive');
+  var stage=el('stage');
+  var splash=el('splash');
+
+  if(!day){
+    stage.hidden=true;
+    status.hidden=true;
+    splash.hidden=false;
+    stage.innerHTML='';
+    shownCabin={Alpha:null,Beta:null,Gamma:null};
+    return;
+  }
+
+  splash.hidden=true;
+  status.hidden=false;
+  stage.hidden=false;
+  el('dayTitle').innerHTML=esc(fullDay(day))+'&rsquo;s <em>champions</em>';
+
+  var winners=data.winners||{};
+  var changed=[];
+  var srParts=[];
+
+  stage.innerHTML=GROUPS.map(function(g){
+    var w=winners[g]||null;
+    var cls='award '+GROUP_CLS[g]+((w&&w.winnerProvisional)?' prov':'');
+    return '<article class="'+cls+'" id="award-'+g+'" aria-label="'+esc(g)+' division Golden Plunger">'+
+      cardInner(g,w)+'</article>';
+  }).join('');
+
+  GROUPS.forEach(function(g){
+    var w=winners[g]||null;
+    var newCabin=w?w.cabin:null;
+    if(newCabin!==shownCabin[g]&&newCabin){changed.push(g);}
+    shownCabin[g]=newCabin;
+    if(w){
+      srParts.push(g+': cabin '+w.cabin+', '+w.cleanliness+' out of 10'+
+        (w.winnerProvisional?', pending a tiebreak':''));
+    }else{
+      srParts.push(g+': no entries yet');
+    }
+  });
+
+  el('srSummary').textContent=fullDay(day)+' Golden Plunger winners. '+srParts.join('. ')+'.';
+
+  changed.forEach(function(g){
+    var node=el('award-'+g);
+    if(node)triggerReveal(node);
+  });
+}
+
+function init(){
+  if(typeof google==='undefined'||!google.script||!google.script.run){
+    // No server bridge: leave the charming waiting splash up rather than error out.
+    el('stamp').textContent='waiting for the score sheet…';
+    return;
+  }
+  fetchData();
+}
+
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden){clearTimeout(pollTimer);}
+  else{clearTimeout(pollTimer);fetchData();}
+});
+
+el('splashBlurb').textContent=splashBlurbText();
+window.addEventListener('load',init);
+})();
+</script>
+</body>
+</html>
