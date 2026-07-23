@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Color Wars!</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+:root{
+  --bg-page:#0b0f17;
+  --bg-card:#121820;
+  --bg-code:#0d1219;
+  --border:#1e2d42;
+  --border-subtle:#182030;
+  --cyan:#00c8e6;
+  --cyan-dim:#2596b3;
+  --cyan-glow:rgba(0,200,230,0.12);
+  --text-primary:#dde4ef;
+  --text-secondary:#7a90aa;
+  --text-muted:#7488a1;
+  --accent-yellow:#f5a623;
+  --alpha:#f26a6a;
+  --beta:#5aa2ff;
+  --gamma:#34d17f;
+  --medal-gold:#f5c518;
+  --medal-silver:#c8ccd6;
+  --medal-bronze:#c97a3a;
+  --team-red:#f26a6a;
+  --team-blue:#5aa2ff;
+  --team-green:#34d17f;
+  --team-yellow:#f5c518;
+  --radius:10px;
+  --sans:'Poppins',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;background:var(--bg-page);color-scheme:dark}
+body{background:var(--bg-page);color:var(--text-primary);font:400 1rem/1.5 var(--sans);
+  -webkit-font-smoothing:antialiased;height:100vh;overflow:hidden}
+
+/* deck shell */
+#deck{position:relative;height:100vh;width:100vw}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;padding:clamp(1.5rem,4vw,4rem) clamp(1.5rem,3.4vw,3.6rem);
+  opacity:0;transition:opacity .45s ease}
+.slide.active{display:flex;opacity:1}
+.slide::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(ellipse 60% 50% at 50% 0%,color-mix(in srgb,var(--cyan) 7%,transparent),transparent 70%)}
+
+.eyebrow{font-family:var(--sans);font-size:clamp(1rem,1.7vw,1.4rem);font-weight:700;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--cyan);display:flex;align-items:center;gap:.7rem;flex-wrap:wrap}
+.loc-badge{display:inline-flex;align-items:center;gap:.4rem;background:var(--bg-card);border:1px solid var(--border);
+  border-radius:999px;padding:.35rem 1rem;color:var(--text-primary);font-size:clamp(.85rem,1.3vw,1.15rem);font-weight:600;
+  letter-spacing:.06em;text-transform:uppercase}
+.loc-badge svg{width:.9em;height:.9em;fill:var(--cyan)}
+
+h1.slide-title{font-size:clamp(2.6rem,6vw,5.6rem);font-weight:800;line-height:1.05;letter-spacing:-.01em;
+  margin:.5rem 0 0;color:var(--text-primary)}
+
+.score-tag{display:inline-flex;align-items:center;justify-content:center;text-align:center;gap:.5rem;background:var(--cyan-glow);border:1.5px solid var(--cyan-dim);
+  color:var(--cyan);border-radius:999px;padding:.6rem 1.3rem;font-weight:700;font-size:clamp(1.15rem,1.8vw,1.7rem);
+  white-space:nowrap}
+
+.rules{list-style:none;display:flex;flex-direction:column;gap:clamp(.8rem,1.6vh,1.2rem)}
+.rules li{position:relative;padding-left:1.7em;color:var(--text-primary);font-size:clamp(1.25rem,2vw,1.85rem);line-height:1.35}
+.rules li::before{content:'';position:absolute;left:0;top:.5em;width:11px;height:11px;border-radius:2px;background:var(--cyan);transform:rotate(45deg)}
+.rules li b,.rules li strong{color:var(--cyan);font-weight:700}
+
+.challenge-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:clamp(.75rem,1.5vw,1.5rem);flex:1;min-height:0;align-items:center;margin-top:clamp(.8rem,2vh,1.6rem)}
+.challenge-grid .illo-pane{display:flex;align-items:center;justify-content:center;min-height:0;height:100%}
+.challenge-grid .illo-pane svg{width:100%;height:100%;max-height:min(52vh,520px)}
+.challenge-copy{display:flex;flex-direction:column;gap:1.4rem;min-height:0;justify-content:center}
+@media (max-width:900px){.challenge-grid{grid-template-columns:1fr}}
+
+/* nav */
+#navdots{position:fixed;left:50%;bottom:1.1rem;transform:translateX(-50%);display:flex;gap:.5rem;z-index:50}
+#navdots button{width:.55rem;height:.55rem;border-radius:50%;border:1px solid var(--border);background:var(--bg-card);
+  cursor:pointer;padding:0;transition:background .2s,transform .2s}
+#navdots button[aria-current="true"]{background:var(--cyan);transform:scale(1.35);border-color:var(--cyan)}
+.navbtn{position:fixed;top:50%;transform:translateY(-50%);z-index:50;width:2.6rem;height:2.6rem;border-radius:50%;
+  border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:color .15s,border-color .15s}
+.navbtn:hover{color:var(--cyan);border-color:var(--cyan)}
+.navbtn svg{width:1.2rem;height:1.2rem;fill:currentColor}
+#prevBtn{left:1.1rem}
+#nextBtn{right:1.1rem}
+#fsBtn{position:fixed;top:1.1rem;right:1.1rem;z-index:50;width:2.4rem;height:2.4rem;border-radius:50%;
+  border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);cursor:pointer;
+  display:flex;align-items:center;justify-content:center}
+#fsBtn:hover{color:var(--cyan);border-color:var(--cyan)}
+#fsBtn svg{width:1.1rem;height:1.1rem;fill:currentColor}
+#counter{position:fixed;top:1.2rem;left:1.2rem;z-index:50;font-size:.75rem;font-weight:600;letter-spacing:.1em;
+  color:var(--text-muted);font-family:var(--sans)}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
+}
+@media (forced-colors:active){
+  .navbtn,#fsBtn,.loc-badge,.score-tag{border:1px solid ButtonText}
+}
+
+/* ===== SLIDE-SPECIFIC STYLES INSERTED BY BUILDERS BELOW ===== */
+
+/* ============================= SHARED FLAG ENGINE (ripple-cloth bands + whip-snap, used by slide1 + slide10) ============================= */
+@keyframes flagRipple{
+  0%,100%{transform:translateY(calc(var(--amp,0)*1px)) skewY(calc(var(--sk,0)*1deg));}
+  50%{transform:translateY(calc(var(--amp,0)*-1px)) skewY(calc(var(--sk,0)*-1deg));}
+}
+@keyframes flagSheen{
+  0%{transform:translateX(var(--sx0,-6px));opacity:0;}
+  30%{opacity:.9;}
+  70%{opacity:.9;}
+  100%{transform:translateX(var(--sx1,60px));opacity:0;}
+}
+@keyframes flagSnap{
+  0%{transform:skewX(0deg) scaleX(1);}
+  6%{transform:skewX(-16deg) scaleX(1.06);}
+  14%{transform:skewX(11deg) scaleX(.965);}
+  22%{transform:skewX(-6deg) scaleX(1.02);}
+  30%{transform:skewX(3deg) scaleX(.99);}
+  38%{transform:skewX(-1.5deg) scaleX(1.005);}
+  46%,100%{transform:skewX(0deg) scaleX(1);}
+}
+@keyframes flagGlow{
+  0%,46%,100%{filter:drop-shadow(0 0 2px var(--gc));}
+  6%{filter:drop-shadow(0 0 14px var(--gc)) drop-shadow(0 0 6px var(--gc));}
+  20%{filter:drop-shadow(0 0 6px var(--gc));}
+}
+.flag-band{transform-box:fill-box;transform-origin:center;animation:flagRipple 2.2s ease-in-out infinite;animation-delay:var(--d,0s);}
+.flag-sheen{animation:flagSheen 3.4s linear infinite;mix-blend-mode:screen;}
+.flag-outline{fill:none;stroke:var(--text-primary);stroke-linejoin:round;}
+
+/* ============================= SLIDE 1 — TITLE ============================= */
+#slide1{
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  gap:clamp(1.2rem,3vh,2.4rem);
+  position:relative;
+  overflow:hidden;
+}
+#slide1 .s1-glow{
+  position:absolute;
+  inset:0;
+  background:radial-gradient(circle at 50% 42%,var(--cyan-glow),transparent 60%);
+  pointer-events:none;
+  animation:s1Breathe 6s ease-in-out infinite;
+}
+#slide1 .s1-eyebrow{
+  display:inline-flex;
+  align-items:center;
+  gap:.7em;
+  font-size:clamp(1.05rem,1.8vw,1.5rem);
+  font-weight:700;
+  letter-spacing:.32em;
+  text-transform:uppercase;
+  color:var(--cyan);
+  z-index:1;
+}
+#slide1 .s1-eyebrow::before,
+#slide1 .s1-eyebrow::after{
+  content:"";
+  width:clamp(1.8rem,5vw,4rem);
+  height:2px;
+  background:linear-gradient(90deg,transparent,var(--cyan-dim));
+}
+#slide1 .s1-eyebrow::after{background:linear-gradient(90deg,var(--cyan-dim),transparent);}
+
+#slide1 .s1-title{
+  margin:0;
+  font-weight:800;
+  line-height:.92;
+  letter-spacing:-.01em;
+  font-size:clamp(3.6rem,13vw,11rem);
+  z-index:1;
+  display:flex;
+  gap:.06em;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+#slide1 .s1-title span{
+  display:inline-block;
+  animation:s1LetterPop .8s cubic-bezier(.2,1.4,.4,1) both,
+            s1Float 4.5s ease-in-out infinite;
+  text-shadow:0 0 34px rgba(0,0,0,.4);
+}
+#slide1 .s1-title .c1{color:var(--team-red);   animation-delay:.05s,1s;}
+#slide1 .s1-title .c2{color:var(--team-blue);  animation-delay:.13s,1.25s;}
+#slide1 .s1-title .c3{color:var(--team-yellow);animation-delay:.21s,1.5s;}
+#slide1 .s1-title .c4{color:var(--team-green); animation-delay:.29s,1.75s;}
+#slide1 .s1-title .gap{width:.35em;}
+#slide1 .s1-title .bang{color:var(--cyan);animation-delay:.4s,2s;}
+#slide1 .s1-title .w2{color:var(--text-primary);}
+
+#slide1 .s1-sub{
+  margin:0;
+  z-index:1;
+  color:var(--text-primary);
+  opacity:.85;
+  font-size:clamp(1.3rem,2.4vw,2rem);
+  font-weight:500;
+  letter-spacing:.02em;
+  max-width:36ch;
+}
+#slide1 .s1-sub b{color:var(--text-primary);font-weight:700;}
+
+#slide1 .s1-art{
+  z-index:1;
+  width:min(52vw,560px);
+  height:auto;
+}
+#slide1 .s1-chips{
+  z-index:1;
+  display:flex;
+  gap:clamp(.6rem,1.4vw,1.1rem);
+  flex-wrap:wrap;
+  justify-content:center;
+}
+#slide1 .s1-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:.55em;
+  padding:.5em 1.15em;
+  border-radius:999px;
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  font-weight:600;
+  font-size:clamp(1.05rem,1.7vw,1.4rem);
+  color:var(--text-primary);
+}
+#slide1 .s1-chip i{
+  width:.85em;height:.85em;border-radius:50%;
+  display:inline-block;
+  animation:s1DotPulse 2.4s ease-in-out infinite;
+}
+#slide1 .s1-chip.red i{background:var(--team-red);animation-delay:0s;}
+#slide1 .s1-chip.blue i{background:var(--team-blue);animation-delay:.3s;}
+#slide1 .s1-chip.yellow i{background:var(--team-yellow);animation-delay:.6s;}
+#slide1 .s1-chip.green i{background:var(--team-green);animation-delay:.9s;}
+
+/* slide1 flag animation: whip-snap flag group + internal ripple-cloth bands (keyframes in shared flag engine above) */
+#slide1 .s1-flag{animation:flagSnap 2.6s cubic-bezier(.16,.9,.3,1.4) infinite, flagGlow 2.6s ease-out infinite;}
+#slide1 .s1-flag-a{animation-delay:0s;--gc:var(--team-red);}
+#slide1 .s1-flag-b{animation-delay:.4s;--gc:var(--team-blue);}
+#slide1 .s1-flag-c{animation-delay:.8s;--gc:var(--team-yellow);}
+#slide1 .s1-flag-d{animation-delay:1.2s;--gc:var(--team-green);}
+#slide1 .flag-outline{stroke-width:5;}
+
+@keyframes s1Breathe{0%,100%{opacity:.55;}50%{opacity:1;}}
+@keyframes s1LetterPop{0%{opacity:0;transform:translateY(40px) scale(.6) rotate(-6deg);}100%{opacity:1;transform:translateY(0) scale(1) rotate(0);}}
+@keyframes s1Float{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+@keyframes s1DotPulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.35);opacity:.7;}}
+
+/* ============================= SLIDE 2 — OVERVIEW (steps) ============================= */
+#slide2{gap:clamp(1.2rem,3vh,2.2rem);justify-content:center;}
+#slide2 .s2-head{display:flex;flex-direction:column;gap:.4rem;}
+#slide2 .s2-steps{
+  display:flex;
+  flex-direction:column;
+  gap:clamp(1rem,2.4vh,1.6rem);
+  flex:1;
+  justify-content:center;
+  max-width:1400px;
+}
+#slide2 .s2-step{
+  display:flex;
+  align-items:center;
+  gap:clamp(1.2rem,2.2vw,1.8rem);
+  background:var(--bg-card);
+  border:1px solid var(--border-subtle);
+  border-left:5px solid var(--cyan);
+  border-radius:var(--radius);
+  padding:clamp(1rem,2.2vh,1.5rem) clamp(1.3rem,2.4vw,2rem);
+  opacity:0;
+  animation:s2FlowIn .6s ease-out both;
+}
+#slide2 .s2-step:nth-child(1){animation-delay:.05s;}
+#slide2 .s2-step:nth-child(2){animation-delay:.15s;}
+#slide2 .s2-step:nth-child(3){animation-delay:.25s;}
+#slide2 .s2-step:nth-child(4){animation-delay:.35s;}
+#slide2 .s2-step:nth-child(5){animation-delay:.45s;}
+#slide2 .s2-num{
+  flex:none;
+  width:clamp(2.8rem,4vw,3.6rem);
+  height:clamp(2.8rem,4vw,3.6rem);
+  border-radius:50%;
+  display:grid;place-items:center;
+  font-weight:800;
+  font-size:clamp(1.3rem,2.1vw,1.7rem);
+  color:var(--bg-page);
+  background:var(--cyan);
+}
+#slide2 .s2-step-txt{display:flex;flex-direction:column;gap:.3rem;min-width:0;}
+#slide2 .s2-step-txt b{
+  color:var(--text-primary);
+  font-size:clamp(1.3rem,2.1vw,1.7rem);
+  font-weight:700;
+}
+#slide2 .s2-step-txt span{
+  color:var(--text-primary);
+  opacity:.82;
+  font-size:clamp(1.05rem,1.6vw,1.35rem);
+  line-height:1.35;
+}
+#slide2 .s2-foot{
+  margin:0;
+  background:linear-gradient(90deg,var(--cyan-glow),transparent);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius);
+  padding:clamp(1rem,2vh,1.4rem) clamp(1.3rem,2.2vw,1.8rem);
+  font-size:clamp(1.2rem,1.9vw,1.6rem);
+  font-weight:600;
+  color:var(--text-primary);
+}
+#slide2 .s2-foot .arrow{color:var(--cyan);font-weight:800;margin:0 .15em}
+#slide2 .s2-foot .lake{color:var(--cyan-dim);font-weight:700;}
+
+@keyframes s2FlowIn{0%{opacity:0;transform:translateX(-22px);}100%{opacity:1;transform:translateX(0);}}
+
+/* ============================= SLIDE 9 — CIPHER / FINALE ============================= */
+#slide9{gap:clamp(1rem,2.4vh,1.8rem);}
+#slide9 .s9-head{display:flex;flex-direction:column;gap:.4rem;}
+#slide9 .s9-body{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);
+  gap:clamp(.6rem,1.5vw,1.5rem);
+  align-items:center;
+  flex:1;
+  min-height:0;
+}
+#slide9 .s9-art{width:100%;height:auto;max-height:46vh;}
+#slide9 .s9-right{display:flex;flex-direction:column;gap:clamp(1.2rem,2.6vh,1.9rem);min-width:0;}
+#slide9 .s9-steps{
+  list-style:none;margin:0;padding:0;
+  display:flex;flex-direction:column;gap:clamp(.7rem,1.6vh,1.05rem);
+}
+#slide9 .s9-steps li{
+  position:relative;padding-left:1.7em;
+  color:var(--text-primary);
+  font-size:clamp(1.15rem,1.8vw,1.55rem);
+  line-height:1.35;
+}
+#slide9 .s9-steps li b{color:var(--cyan);font-weight:700;}
+#slide9 .s9-steps li::before{
+  content:"";position:absolute;left:0;top:.5em;
+  width:.6em;height:.6em;
+  transform:rotate(45deg);
+  background:var(--cyan);
+}
+#slide9 .s9-score-title{
+  display:flex;align-items:center;gap:.7rem;
+  color:var(--accent-yellow);
+  font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  font-size:clamp(1.05rem,1.6vw,1.35rem);
+}
+#slide9 .s9-score-title::after{content:"";flex:1;height:1px;background:var(--border);}
+#slide9 .s9-ranks{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:clamp(.7rem,1.5vw,1.1rem);
+}
+#slide9 .s9-rank{
+  background:var(--bg-card);
+  border:1px solid var(--border-subtle);
+  border-top:4px solid var(--border);
+  border-radius:var(--radius);
+  padding:clamp(.9rem,1.8vh,1.3rem) .6rem;
+  text-align:center;
+  display:flex;flex-direction:column;gap:.4rem;
+  animation:s9RankRise .6s ease-out both;
+}
+#slide9 .s9-rank:nth-child(1){animation-delay:.05s;}
+#slide9 .s9-rank:nth-child(2){animation-delay:.15s;}
+#slide9 .s9-rank:nth-child(3){animation-delay:.25s;}
+#slide9 .s9-rank:nth-child(4){animation-delay:.35s;}
+#slide9 .s9-rank .place{
+  font-size:clamp(.9rem,1.4vw,1.15rem);
+  font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--text-primary);
+  opacity:.75;
+}
+#slide9 .s9-rank .pts{
+  font-size:clamp(1.9rem,3.8vw,3rem);
+  font-weight:800;line-height:1;
+}
+#slide9 .s9-rank .lbl{font-size:clamp(.85rem,1.3vw,1.05rem);color:var(--text-primary);opacity:.75;}
+#slide9 .s9-rank.gold{border-top-color:var(--medal-gold);}
+#slide9 .s9-rank.gold .pts{color:var(--medal-gold);}
+#slide9 .s9-rank.silver{border-top-color:var(--medal-silver);}
+#slide9 .s9-rank.silver .pts{color:var(--medal-silver);}
+#slide9 .s9-rank.bronze{border-top-color:var(--medal-bronze);}
+#slide9 .s9-rank.bronze .pts{color:var(--medal-bronze);}
+#slide9 .s9-rank.fourth .pts{color:var(--text-primary);}
+
+#slide9 .s9-frag{animation:s9ScrollJoin 5s ease-in-out infinite;}
+#slide9 .s9-frag-r{animation-delay:0s;}
+#slide9 .s9-frag-b{animation-delay:.15s;}
+#slide9 .s9-frag-y{animation-delay:.3s;}
+#slide9 .s9-frag-g{animation-delay:.45s;}
+#slide9 .s9-wheel{transform-origin:240px 180px;animation:s9Wheel 12s linear infinite;}
+#slide9 .s9-glow{transform-origin:240px 180px;animation:s9Pulse 5s ease-in-out infinite;}
+
+@keyframes s9ScrollJoin{
+  0%,18%{transform:translate(var(--dx,0),var(--dy,0)) rotate(var(--dr,0));opacity:.4;}
+  46%,74%{transform:translate(0,0) rotate(0);opacity:1;}
+  100%{transform:translate(var(--dx,0),var(--dy,0)) rotate(var(--dr,0));opacity:.4;}
+}
+@keyframes s9Wheel{to{transform:rotate(360deg);}}
+@keyframes s9Pulse{0%,100%{opacity:.15;transform:scale(.9);}50%{opacity:.4;transform:scale(1.05);}}
+@keyframes s9RankRise{0%{opacity:0;transform:translateY(20px);}100%{opacity:1;transform:translateY(0);}}
+
+/* ---------- Slide 3: Building on the Rock ---------- */
+#slide3 .illo-pane svg .s3-cup { stroke: var(--bg-page); stroke-width: 3.5; }
+#slide3 .s3-tower {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: s3CupWobble 3.4s ease-in-out infinite;
+}
+@keyframes s3CupWobble {
+  0%, 100% { transform: rotate(-3.5deg); }
+  50%      { transform: rotate(3.5deg); }
+}
+#slide3 .s3-relay {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: s3RelayCup 3s ease-in-out infinite;
+}
+@keyframes s3RelayCup {
+  0%   { transform: translate(0,0); opacity: 0; }
+  15%  { opacity: 1; }
+  70%  { transform: translate(120px,-118px); opacity: 1; }
+  85%, 100% { transform: translate(120px,-118px); opacity: 0; }
+}
+
+/* ---------- Slide 4: The Narrow Gate ---------- */
+#slide4 .s4-tarp {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: s4TarpTilt 4.4s ease-in-out infinite;
+}
+@keyframes s4TarpTilt {
+  0%, 100% { transform: rotate(-5deg); }
+  50%      { transform: rotate(5deg); }
+}
+#slide4 .s4-ball {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: s4BallRoll 4.4s ease-in-out infinite;
+}
+@keyframes s4BallRoll {
+  0%   { transform: translate(-96px,14px); }
+  50%  { transform: translate(96px,-14px); }
+  72%  { transform: translate(150px,42px); }
+  100% { transform: translate(-96px,14px); }
+}
+
+/* ---------- Slide 5: Bear One Another's Burdens ---------- */
+#slide5 .s5-rig {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: s5TubeTilt 4.6s ease-in-out infinite;
+}
+@keyframes s5TubeTilt {
+  0%, 100% { transform: rotate(-2.2deg); }
+  50%      { transform: rotate(2.2deg); }
+}
+#slide5 .s5-ball {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: s5BallRoll 4.6s ease-in-out infinite;
+}
+@keyframes s5BallRoll {
+  0%   { transform: translate(0,0); }
+  82%  { transform: translate(300px,58px); }
+  90%  { transform: translate(320px,86px); }
+  100% { transform: translate(0,0); }
+}
+
+/* ===== shared line-art helpers (scoped per slide) ===== */
+#slide6 .lart,#slide7 .lart,#slide8 .lart{
+  fill:none;stroke:var(--text-primary);stroke-width:6.5;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+#slide6 .fillsh,#slide7 .fillsh,#slide8 .fillsh{
+  fill:var(--bg-card);stroke:var(--text-primary);stroke-width:6.5;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+#slide6 .ground,#slide7 .ground,#slide8 .ground{
+  fill:none;stroke:var(--border);stroke-width:5;stroke-linecap:round;
+}
+
+/* ===== slide 6 : blindfolded flag hunt ===== */
+#slide6 .s6-seeker{
+  animation:s6Seek 3.6s ease-in-out infinite;
+  transform-box:fill-box;transform-origin:bottom center;
+}
+#slide6 .s6-wave{
+  fill:none;stroke:var(--cyan);stroke-width:5;stroke-linecap:round;
+  opacity:0;animation:s6Wave 2.4s ease-out infinite;
+}
+#slide6 .s6-wave.w2{animation-delay:.5s}
+#slide6 .s6-wave.w3{animation-delay:1s}
+#slide6 .s6-flag{
+  transform-box:fill-box;transform-origin:left center;
+  animation:s6Flag 3s ease-in-out infinite;
+}
+@keyframes s6Seek{
+  0%,100%{transform:translateX(0) rotate(0deg)}
+  50%{transform:translateX(11px) rotate(2.5deg)}
+}
+@keyframes s6Wave{
+  0%{opacity:0;transform:translateX(-6px) scale(.7)}
+  35%{opacity:.9}
+  100%{opacity:0;transform:translateX(14px) scale(1.15)}
+}
+@keyframes s6Flag{
+  0%,100%{transform:skewX(0deg)}
+  50%{transform:skewX(-9deg)}
+}
+
+/* ===== slide 7 : water catapult + tube ===== */
+#slide7 .s7-lever{
+  transform-box:fill-box;transform-origin:center;
+  animation:s7Lever 2.8s ease-in-out infinite;
+}
+#slide7 .s7-cup{animation:s7Cup 2.8s ease-in-out infinite}
+#slide7 .s7-sph{animation:s7Rise 3.2s ease-in infinite;opacity:0}
+#slide7 .s7-sph.r2{animation-delay:1s}
+#slide7 .s7-sph.r3{animation-delay:2s}
+@keyframes s7Lever{
+  0%,100%{transform:rotate(-7deg)}
+  20%{transform:rotate(6deg)}
+  60%{transform:rotate(-7deg)}
+}
+@keyframes s7Cup{
+  0%{transform:translate(0,0);opacity:0}
+  8%{opacity:1}
+  50%{transform:translate(118px,-96px);opacity:1}
+  90%{transform:translate(212px,-8px);opacity:1}
+  100%{transform:translate(212px,-8px);opacity:0}
+}
+@keyframes s7Rise{
+  0%{opacity:0;transform:translateY(6px)}
+  20%{opacity:1}
+  80%{opacity:1;transform:translateY(-176px)}
+  100%{opacity:0;transform:translateY(-210px)}
+}
+
+/* ===== slide 8 : chopstick relay pit ===== */
+#slide8 .s8-lift{animation:s8Lift 4.4s ease-in-out infinite}
+#slide8 .s8-bob{animation:s8Bob 3s ease-in-out infinite}
+#slide8 .s8-bob.b2{animation-delay:.7s}
+#slide8 .s8-bob.b3{animation-delay:1.3s}
+@keyframes s8Lift{
+  0%{transform:translate(0,0);opacity:1}
+  22%{transform:translate(0,-72px)}
+  52%{transform:translate(196px,-72px)}
+  76%{transform:translate(200px,4px);opacity:1}
+  82%{opacity:0}
+  100%{transform:translate(0,0);opacity:0}
+}
+@keyframes s8Bob{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-4px)}
+}
+
+/* ============================= SLIDE 10 — CLOSER ============================= */
+#slide10{
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  gap:clamp(1rem,2.6vh,2.2rem);
+  overflow:hidden;
+}
+#slide10 .s10-stage{
+  position:relative;
+  width:min(1180px,92vw);
+  max-height:62vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+#slide10 .s10-burst{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  overflow:visible;
+}
+#slide10 .s10-rays{
+  transform-origin:400px 250px;
+  animation:s10RaysIn .9s cubic-bezier(.16,1,.3,1) both, s10RaysSpin 60s linear 1s infinite;
+}
+#slide10 .s10-ray{
+  stroke-width:11;
+  stroke-linecap:round;
+  transform-origin:400px 250px;
+  opacity:.9;
+  animation:s10RayPulse 2.6s ease-in-out infinite;
+}
+#slide10 .s10-ray.r{ stroke:var(--team-red); }
+#slide10 .s10-ray.b{ stroke:var(--team-blue); }
+#slide10 .s10-ray.y{ stroke:var(--team-yellow); }
+#slide10 .s10-ray.g{ stroke:var(--team-green); }
+#slide10 .s10-ray:nth-child(2n){ animation-delay:.35s; }
+#slide10 .s10-ray:nth-child(3n){ animation-delay:.7s; }
+#slide10 .s10-ray:nth-child(4n){ animation-delay:1.05s; }
+#slide10 .s10-core{
+  fill:var(--cyan-glow);
+  transform-origin:400px 250px;
+  animation:s10CoreBreathe 3.4s ease-in-out infinite;
+}
+#slide10 .s10-confetti{
+  transform-origin:400px 250px;
+  animation:s10Confetti 2.8s ease-out infinite;
+}
+#slide10 .s10-confetti:nth-child(1){ animation-delay:0s; }
+#slide10 .s10-confetti:nth-child(2){ animation-delay:.2s; }
+#slide10 .s10-confetti:nth-child(3){ animation-delay:.45s; }
+#slide10 .s10-confetti:nth-child(4){ animation-delay:.7s; }
+#slide10 .s10-confetti:nth-child(5){ animation-delay:.95s; }
+#slide10 .s10-confetti:nth-child(6){ animation-delay:1.2s; }
+#slide10 .s10-confetti:nth-child(7){ animation-delay:1.45s; }
+#slide10 .s10-confetti:nth-child(8){ animation-delay:1.7s; }
+#slide10 .s10-confetti:nth-child(9){ animation-delay:.1s; }
+#slide10 .s10-confetti:nth-child(10){ animation-delay:.55s; }
+#slide10 .s10-confetti:nth-child(11){ animation-delay:.85s; }
+#slide10 .s10-confetti:nth-child(12){ animation-delay:1.35s; }
+#slide10 .s10-title-wrap{
+  position:relative;
+  z-index:2;
+  animation:s10TitlePop 1s cubic-bezier(.16,1,.3,1) both, s10TitleBreathe 4s ease-in-out 1s infinite;
+}
+#slide10 .s10-title{
+  margin:0;
+  font-family:var(--sans);
+  font-weight:800;
+  line-height:.92;
+  letter-spacing:-.01em;
+  font-size:clamp(3.6rem,9.5vw,8.4rem);
+  background:linear-gradient(96deg,var(--team-red) 0%,var(--team-yellow) 34%,var(--team-green) 66%,var(--team-blue) 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  filter:drop-shadow(0 6px 34px rgba(0,0,0,.55));
+}
+#slide10 .s10-subtitle{
+  margin:0;
+  z-index:2;
+  color:var(--text-primary);
+  font-family:var(--sans);
+  font-weight:600;
+  font-size:clamp(1.5rem,2.8vw,2.4rem);
+  letter-spacing:.02em;
+  animation:s10FadeUp 1s ease .35s both;
+}
+#slide10 .s10-subtitle .em{ color:var(--accent-yellow); font-weight:700; }
+#slide10 .s10-flags{
+  z-index:2;
+  display:flex;
+  gap:clamp(1.2rem,3vw,2.6rem);
+  align-items:flex-end;
+  animation:s10FadeUp 1s ease .55s both;
+}
+#slide10 .s10-flag{
+  width:clamp(56px,6vw,88px);
+  height:auto;
+}
+#slide10 .s10-flag .pole{ stroke:var(--text-primary); stroke-width:4; stroke-linecap:round; }
+#slide10 .flag-outline{stroke-width:2.4;}
+#slide10 .s10-cloth-g{animation:flagSnap 2.4s cubic-bezier(.16,.9,.3,1.4) infinite, flagGlow 2.4s ease-out infinite;}
+#slide10 .s10-flag:nth-child(1) .s10-cloth-g{--gc:var(--team-red); animation-delay:0s;}
+#slide10 .s10-flag:nth-child(2) .s10-cloth-g{--gc:var(--team-blue); animation-delay:.32s;}
+#slide10 .s10-flag:nth-child(3) .s10-cloth-g{--gc:var(--team-yellow); animation-delay:.64s;}
+#slide10 .s10-flag:nth-child(4) .s10-cloth-g{--gc:var(--team-green); animation-delay:.96s;}
+
+@keyframes s10RaysIn{
+  from{ transform:scale(0) rotate(-30deg); opacity:0; }
+  to{ transform:scale(1) rotate(0deg); opacity:1; }
+}
+@keyframes s10RaysSpin{
+  from{ transform:rotate(0deg); }
+  to{ transform:rotate(360deg); }
+}
+@keyframes s10RayPulse{
+  0%,100%{ transform:scale(1); opacity:.55; }
+  50%{ transform:scale(1.12); opacity:1; }
+}
+@keyframes s10CoreBreathe{
+  0%,100%{ transform:scale(1); opacity:.7; }
+  50%{ transform:scale(1.18); opacity:1; }
+}
+@keyframes s10Confetti{
+  0%{ transform:translate(0,0) rotate(0deg) scale(.4); opacity:0; }
+  15%{ opacity:1; }
+  70%{ opacity:1; }
+  100%{ transform:translate(var(--dx),var(--dy)) rotate(220deg) scale(1); opacity:0; }
+}
+@keyframes s10TitlePop{
+  0%{ transform:scale(.6); opacity:0; }
+  60%{ transform:scale(1.06); }
+  100%{ transform:scale(1); opacity:1; }
+}
+@keyframes s10TitleBreathe{
+  0%,100%{ transform:scale(1); }
+  50%{ transform:scale(1.025); }
+}
+@keyframes s10FadeUp{
+  from{ transform:translateY(22px); opacity:0; }
+  to{ transform:translateY(0); opacity:1; }
+}
+
+</style>
+</head>
+<body>
+
+<div id="counter">01 / 09</div>
+<button id="fsBtn" type="button" aria-label="Toggle fullscreen">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+</button>
+<button id="prevBtn" class="navbtn" type="button" aria-label="Previous slide">
+  <svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></svg>
+</button>
+<button id="nextBtn" class="navbtn" type="button" aria-label="Next slide">
+  <svg viewBox="0 0 24 24"><path d="M8.6 16.6 10 18l6-6-6-6-1.4 1.4L13.2 12z"/></svg>
+</button>
+
+<div id="deck">
+<section class="slide" id="slide1">
+  <div class="s1-glow" aria-hidden="true"></div>
+
+  <div class="s1-eyebrow">Squads &middot; Challenges &middot; Scripture</div>
+
+  <h1 class="s1-title" aria-label="Color Wars!">
+    <span class="c1">C</span><span class="c2">O</span><span class="c3">L</span><span class="c4">O</span><span class="c1">R</span>
+    <span class="gap" aria-hidden="true"></span>
+    <span class="w2">W</span><span class="w2">A</span><span class="w2">R</span><span class="w2">S</span><span class="bang">!</span>
+  </h1>
+
+  <svg class="s1-art" viewBox="0 0 480 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Four team flags rippling and snapping in the wind">
+    <defs>
+      <linearGradient id="s1FlagSheen" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+        <stop offset="0.5" stop-color="#fff" stop-opacity="0.4"/>
+        <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+      </linearGradient>
+      <clipPath id="s1FlagClip"><path d="M0 6 H58 L50 32 L58 58 H0 Z"/></clipPath>
+    </defs>
+
+    <line x1="96"  y1="150" x2="96"  y2="326" stroke="var(--text-primary)" stroke-width="7" stroke-linecap="round"/>
+    <line x1="192" y1="150" x2="192" y2="326" stroke="var(--text-primary)" stroke-width="7" stroke-linecap="round"/>
+    <line x1="288" y1="150" x2="288" y2="326" stroke="var(--text-primary)" stroke-width="7" stroke-linecap="round"/>
+    <line x1="384" y1="150" x2="384" y2="326" stroke="var(--text-primary)" stroke-width="7" stroke-linecap="round"/>
+    <line x1="70" y1="326" x2="410" y2="326" stroke="var(--border)" stroke-width="7" stroke-linecap="round"/>
+
+    <g transform="translate(96,150)">
+      <g class="s1-flag s1-flag-a" style="transform-origin:0px 0px;">
+        <g clip-path="url(#s1FlagClip)">
+          <rect class="flag-band" x="0"  y="-4" width="11" height="72" fill="var(--team-red)" style="--amp:.6;--sk:.4;--d:0s"/>
+          <rect class="flag-band" x="10" y="-4" width="11" height="72" fill="var(--team-red)" style="--amp:1.5;--sk:1;--d:-.13s"/>
+          <rect class="flag-band" x="20" y="-4" width="11" height="72" fill="var(--team-red)" style="--amp:2.5;--sk:1.6;--d:-.26s"/>
+          <rect class="flag-band" x="29" y="-4" width="11" height="72" fill="var(--team-red)" style="--amp:3.5;--sk:2.2;--d:-.39s"/>
+          <rect class="flag-band" x="38" y="-4" width="11" height="72" fill="var(--team-red)" style="--amp:4.6;--sk:2.8;--d:-.52s"/>
+          <rect class="flag-band" x="47" y="-4" width="12" height="72" fill="var(--team-red)" style="--amp:5.7;--sk:3.4;--d:-.65s"/>
+          <rect class="flag-sheen" x="-6" y="-4" width="16" height="72" fill="url(#s1FlagSheen)" style="--sx0:-6px;--sx1:60px"/>
+        </g>
+        <path class="flag-outline" d="M0 6 H58 L50 32 L58 58 H0 Z"/>
+      </g>
+    </g>
+    <g transform="translate(192,150)">
+      <g class="s1-flag s1-flag-b" style="transform-origin:0px 0px;">
+        <g clip-path="url(#s1FlagClip)">
+          <rect class="flag-band" x="0"  y="-4" width="11" height="72" fill="var(--team-blue)" style="--amp:.6;--sk:.4;--d:-.4s"/>
+          <rect class="flag-band" x="10" y="-4" width="11" height="72" fill="var(--team-blue)" style="--amp:1.5;--sk:1;--d:-.53s"/>
+          <rect class="flag-band" x="20" y="-4" width="11" height="72" fill="var(--team-blue)" style="--amp:2.5;--sk:1.6;--d:-.66s"/>
+          <rect class="flag-band" x="29" y="-4" width="11" height="72" fill="var(--team-blue)" style="--amp:3.5;--sk:2.2;--d:-.79s"/>
+          <rect class="flag-band" x="38" y="-4" width="11" height="72" fill="var(--team-blue)" style="--amp:4.6;--sk:2.8;--d:-.92s"/>
+          <rect class="flag-band" x="47" y="-4" width="12" height="72" fill="var(--team-blue)" style="--amp:5.7;--sk:3.4;--d:-1.05s"/>
+          <rect class="flag-sheen" x="-6" y="-4" width="16" height="72" fill="url(#s1FlagSheen)" style="--sx0:-6px;--sx1:60px"/>
+        </g>
+        <path class="flag-outline" d="M0 6 H58 L50 32 L58 58 H0 Z"/>
+      </g>
+    </g>
+    <g transform="translate(288,150)">
+      <g class="s1-flag s1-flag-c" style="transform-origin:0px 0px;">
+        <g clip-path="url(#s1FlagClip)">
+          <rect class="flag-band" x="0"  y="-4" width="11" height="72" fill="var(--team-yellow)" style="--amp:.6;--sk:.4;--d:-.8s"/>
+          <rect class="flag-band" x="10" y="-4" width="11" height="72" fill="var(--team-yellow)" style="--amp:1.5;--sk:1;--d:-.93s"/>
+          <rect class="flag-band" x="20" y="-4" width="11" height="72" fill="var(--team-yellow)" style="--amp:2.5;--sk:1.6;--d:-1.06s"/>
+          <rect class="flag-band" x="29" y="-4" width="11" height="72" fill="var(--team-yellow)" style="--amp:3.5;--sk:2.2;--d:-1.19s"/>
+          <rect class="flag-band" x="38" y="-4" width="11" height="72" fill="var(--team-yellow)" style="--amp:4.6;--sk:2.8;--d:-1.32s"/>
+          <rect class="flag-band" x="47" y="-4" width="12" height="72" fill="var(--team-yellow)" style="--amp:5.7;--sk:3.4;--d:-1.45s"/>
+          <rect class="flag-sheen" x="-6" y="-4" width="16" height="72" fill="url(#s1FlagSheen)" style="--sx0:-6px;--sx1:60px"/>
+        </g>
+        <path class="flag-outline" d="M0 6 H58 L50 32 L58 58 H0 Z"/>
+      </g>
+    </g>
+    <g transform="translate(384,150)">
+      <g class="s1-flag s1-flag-d" style="transform-origin:0px 0px;">
+        <g clip-path="url(#s1FlagClip)">
+          <rect class="flag-band" x="0"  y="-4" width="11" height="72" fill="var(--team-green)" style="--amp:.6;--sk:.4;--d:-1.2s"/>
+          <rect class="flag-band" x="10" y="-4" width="11" height="72" fill="var(--team-green)" style="--amp:1.5;--sk:1;--d:-1.33s"/>
+          <rect class="flag-band" x="20" y="-4" width="11" height="72" fill="var(--team-green)" style="--amp:2.5;--sk:1.6;--d:-1.46s"/>
+          <rect class="flag-band" x="29" y="-4" width="11" height="72" fill="var(--team-green)" style="--amp:3.5;--sk:2.2;--d:-1.59s"/>
+          <rect class="flag-band" x="38" y="-4" width="11" height="72" fill="var(--team-green)" style="--amp:4.6;--sk:2.8;--d:-1.72s"/>
+          <rect class="flag-band" x="47" y="-4" width="12" height="72" fill="var(--team-green)" style="--amp:5.7;--sk:3.4;--d:-1.85s"/>
+          <rect class="flag-sheen" x="-6" y="-4" width="16" height="72" fill="url(#s1FlagSheen)" style="--sx0:-6px;--sx1:60px"/>
+        </g>
+        <path class="flag-outline" d="M0 6 H58 L50 32 L58 58 H0 Z"/>
+      </g>
+    </g>
+  </svg>
+
+  <p class="s1-sub">Four teams. Six challenges. One <b>Scripture</b> to crack. Let the games begin.</p>
+
+  <div class="s1-chips">
+    <span class="s1-chip red"><i></i>Red</span>
+    <span class="s1-chip blue"><i></i>Blue</span>
+    <span class="s1-chip yellow"><i></i>Yellow</span>
+    <span class="s1-chip green"><i></i>Green</span>
+  </div>
+</section>
+<section class="slide" id="slide2">
+  <div class="s2-head">
+    <div class="eyebrow">How It Works</div>
+    <h1 class="slide-title">How It Works</h1>
+  </div>
+
+  <div class="s2-steps">
+    <div class="s2-step">
+      <div class="s2-num">1</div>
+      <div class="s2-step-txt">
+        <b>Squads form</b>
+        <span>Each color team splits into 6 squads. Names go on squad cards, armbands passed out.</span>
+      </div>
+    </div>
+    <div class="s2-step">
+      <div class="s2-num">2</div>
+      <div class="s2-step-txt">
+        <b>Trivia to start</b>
+        <span>Every squad answers 4 trivia questions, then heads to its first challenge.</span>
+      </div>
+    </div>
+    <div class="s2-step">
+      <div class="s2-num">3</div>
+      <div class="s2-step-txt">
+        <b>Rotate the 6 challenges</b>
+        <span>Staggered start order keeps squads spread out so no two crowd the same station.</span>
+      </div>
+    </div>
+    <div class="s2-step">
+      <div class="s2-num">4</div>
+      <div class="s2-step-txt">
+        <b>Collect cipher pieces</b>
+        <span>Finishing a challenge earns one piece of your squad's cipher.</span>
+      </div>
+    </div>
+    <div class="s2-step">
+      <div class="s2-num">5</div>
+      <div class="s2-step-txt">
+        <b>Decode &amp; read aloud</b>
+        <span>Use the full cipher to unlock your Scripture, then read it as a color team.</span>
+      </div>
+    </div>
+  </div>
+
+  <p class="s2-foot">
+    Finish all 6 challenges <span class="arrow">&rarr;</span> decode your Scripture <span class="arrow">&rarr;</span> read it as a color team
+    <span class="lake">at the lakefront.</span>
+  </p>
+</section>
+
+<section class="slide" id="slide3">
+  <div class="eyebrow">MATTHEW 7:24–27
+    <span class="loc-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg> Basketball Court</span>
+  </div>
+  <h1 class="slide-title">Building on the Rock</h1>
+  <div class="challenge-grid">
+    <div class="illo-pane">
+      <svg viewBox="0 0 480 360" aria-hidden="true">
+        <g fill="none" stroke="var(--text-primary)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="30" y1="322" x2="450" y2="322"/>
+          <rect x="238" y="288" width="90" height="34" rx="4" fill="var(--bg-card)"/>
+          <line x1="238" y1="300" x2="328" y2="300"/>
+          <g>
+            <line x1="283" y1="252" x2="271" y2="300"/>
+            <line x1="283" y1="252" x2="295" y2="300"/>
+            <rect x="266" y="182" width="34" height="76" rx="17" fill="var(--bg-card)"/>
+            <line x1="269" y1="205" x2="246" y2="230"/>
+            <line x1="297" y1="205" x2="320" y2="230"/>
+            <circle cx="283" cy="162" r="19" fill="var(--bg-card)"/>
+          </g>
+          <g class="s3-tower">
+            <polygon class="s3-cup" points="266,142 300,142 296,120 270,120" fill="var(--team-red)"/>
+            <polygon class="s3-cup" points="268,120 298,120 295,99 271,99" fill="var(--team-blue)"/>
+            <polygon class="s3-cup" points="270,99 296,99 293,79 273,79" fill="var(--team-green)"/>
+            <polygon class="s3-cup" points="272,79 294,79 291,60 275,60" fill="var(--team-yellow)"/>
+          </g>
+          <g>
+            <circle cx="74" cy="238" r="16" fill="var(--bg-card)"/>
+            <rect x="60" y="256" width="28" height="60" rx="14" fill="var(--bg-card)"/>
+            <line x1="86" y1="276" x2="118" y2="262"/>
+          </g>
+          <g>
+            <circle cx="140" cy="250" r="15" fill="var(--bg-card)"/>
+            <rect x="127" y="267" width="26" height="52" rx="13" fill="var(--bg-card)"/>
+          </g>
+          <polygon class="s3-relay s3-cup" points="120,254 150,254 146,232 124,232" fill="var(--team-yellow)"/>
+        </g>
+      </svg>
+    </div>
+    <div class="challenge-copy">
+      <ul class="rules">
+        <li>Pick <b>one counselor</b> to stand inside the box.</li>
+        <li>Relay cups <b>one at a time</b> and stack them on the counselor.</li>
+        <li>The counselor must stay <b>completely still</b> the whole time.</li>
+        <li>Each cup is stacked on its own, <b>never nested</b> inside another.</li>
+        <li>No <b>holding cups in place</b> with your hands.</li>
+        <li>Build the <b>tallest tower</b> you can before time runs out.</li>
+        <li>If it topples, <b>rebuild and keep going</b>.</li>
+      </ul>
+      <div class="score-tag">5 points per cup stacked when time is called</div>
+    </div>
+  </div>
+</section>
+<section class="slide" id="slide4">
+  <div class="eyebrow">MATTHEW 7:13–14
+    <span class="loc-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg> Canteen Porch</span>
+  </div>
+  <h1 class="slide-title">The Narrow Gate</h1>
+  <div class="challenge-grid">
+    <div class="illo-pane">
+      <svg viewBox="0 0 480 360" aria-hidden="true">
+        <g fill="none" stroke="var(--text-primary)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M392 250 l14 66 h44 l14 -66 z" fill="var(--bg-card)"/>
+          <ellipse cx="428" cy="250" rx="30" ry="9" fill="var(--border)"/>
+          <g>
+            <circle cx="238" cy="70" r="16" fill="var(--bg-card)"/>
+            <line x1="238" y1="86" x2="238" y2="132"/>
+            <line x1="238" y1="132" x2="240" y2="150"/>
+          </g>
+          <g>
+            <circle cx="66" cy="196" r="16" fill="var(--bg-card)"/>
+            <line x1="66" y1="212" x2="66" y2="256"/>
+            <line x1="66" y1="220" x2="98" y2="200"/>
+          </g>
+          <g>
+            <circle cx="240" cy="316" r="16" fill="var(--bg-card)"/>
+            <line x1="240" y1="300" x2="240" y2="250"/>
+          </g>
+          <g class="s4-tarp">
+            <ellipse cx="238" cy="196" rx="150" ry="54" fill="var(--bg-card)"/>
+            <ellipse cx="238" cy="196" rx="150" ry="54" fill="none" stroke="var(--team-blue)" stroke-width="6.5"/>
+            <ellipse cx="182" cy="178" rx="15" ry="7" fill="var(--bg-page)" stroke="var(--border)" stroke-width="3"/>
+            <ellipse cx="272" cy="214" rx="15" ry="7" fill="var(--bg-page)" stroke="var(--border)" stroke-width="3"/>
+            <path d="M352 178 a150 54 0 0 1 0 36" stroke="var(--accent-yellow)" stroke-width="7"/>
+          </g>
+          <circle class="s4-ball" cx="238" cy="188" r="17" fill="var(--team-red)" stroke="var(--bg-page)" stroke-width="3"/>
+        </g>
+      </svg>
+    </div>
+    <div class="challenge-copy">
+      <ul class="rules">
+        <li>Everyone <b>grips the outer edge</b> of the tarp at all times.</li>
+        <li>Tilt together to <b>steer each sphere</b> across to the far side.</li>
+        <li>Keep the spheres <b>out of the holes</b> cut in the tarp.</li>
+        <li>Guide each sphere through the <b>narrow gate</b> into the bucket.</li>
+      </ul>
+      <div class="score-tag">10 points per sphere landed in the bucket</div>
+    </div>
+  </div>
+</section>
+<section class="slide" id="slide5">
+  <div class="eyebrow">GALATIANS 6:2
+    <span class="loc-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg> Volleyball Court (by low blocks)</span>
+  </div>
+  <h1 class="slide-title">Bear One Another's Burdens</h1>
+  <div class="challenge-grid">
+    <div class="illo-pane">
+      <svg viewBox="0 0 480 360" aria-hidden="true">
+        <g fill="none" stroke="var(--text-primary)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="24" y1="332" x2="456" y2="332"/>
+          <path d="M366 250 l12 60 h48 l12 -60 z" fill="var(--bg-card)"/>
+          <ellipse cx="402" cy="250" rx="32" ry="9" fill="var(--border)"/>
+          <g>
+            <circle cx="58" cy="238" r="15" fill="var(--bg-card)"/>
+            <rect x="45" y="254" width="26" height="58" rx="13" fill="var(--bg-card)"/>
+            <line x1="70" y1="264" x2="96" y2="176"/>
+          </g>
+          <g>
+            <circle cx="150" cy="252" r="15" fill="var(--bg-card)"/>
+            <rect x="137" y="268" width="26" height="52" rx="13" fill="var(--bg-card)"/>
+            <line x1="162" y1="278" x2="176" y2="182"/>
+          </g>
+          <g>
+            <circle cx="248" cy="256" r="15" fill="var(--bg-card)"/>
+            <rect x="235" y="272" width="26" height="50" rx="13" fill="var(--bg-card)"/>
+            <line x1="260" y1="282" x2="262" y2="198"/>
+          </g>
+          <g>
+            <circle cx="330" cy="260" r="15" fill="var(--bg-card)"/>
+            <rect x="317" y="276" width="26" height="48" rx="13" fill="var(--bg-card)"/>
+            <line x1="316" y1="286" x2="336" y2="214"/>
+          </g>
+          <g class="s5-rig">
+            <line x1="96" y1="176" x2="112" y2="158" stroke="var(--team-red)" stroke-width="5"/>
+            <line x1="176" y1="182" x2="188" y2="168" stroke="var(--team-yellow)" stroke-width="5"/>
+            <line x1="262" y1="198" x2="272" y2="188" stroke="var(--team-green)" stroke-width="5"/>
+            <line x1="336" y1="214" x2="348" y2="206" stroke="var(--team-blue)" stroke-width="5"/>
+            <path d="M104 154 L356 210" stroke="var(--border)" stroke-width="18" stroke-linecap="round"/>
+            <path d="M104 154 L356 210" stroke="var(--text-primary)" stroke-width="6.5"/>
+            <path d="M108 140 L360 196" stroke="var(--text-secondary)" stroke-width="4"/>
+            <circle class="s5-ball" cx="120" cy="146" r="15" fill="var(--team-red)" stroke="var(--bg-page)" stroke-width="3"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <div class="challenge-copy">
+      <ul class="rules">
+        <li>Every squad member holds <b>at least one rope</b> on the tube.</li>
+        <li>Work together to roll the sphere <b>into the far bucket</b>, keeping it on the tube.</li>
+        <li>Stay <b>outside the course</b>: steer only by pulling the ropes.</li>
+        <li>If the sphere <b>hits the ground</b>, the whole team restarts.</li>
+      </ul>
+      <div class="score-tag">10 points per sphere in the bucket</div>
+    </div>
+  </div>
+</section>
+<section class="slide" id="slide6">
+  <div class="eyebrow">2 CORINTHIANS 5:7
+    <span class="loc-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg> Open Area (LVL to the Lake)</span>
+  </div>
+  <h1 class="slide-title">Faith Over Sight</h1>
+  <div class="challenge-grid">
+    <div class="illo-pane">
+      <svg viewBox="0 0 480 360" aria-hidden="true">
+        <line class="ground" x1="30" y1="302" x2="452" y2="302"/>
+        <g>
+          <circle class="fillsh" cx="80" cy="138" r="18"/>
+          <rect class="fillsh" x="66" y="158" width="28" height="66" rx="14"/>
+          <line class="lart" x1="74" y1="224" x2="70" y2="288"/>
+          <line class="lart" x1="86" y1="224" x2="92" y2="288"/>
+          <path class="lart" d="M92 176 Q108 168 104 150"/>
+        </g>
+        <path class="s6-wave" d="M118 118 Q140 138 118 158"/>
+        <path class="s6-wave w2" d="M150 112 Q178 138 150 164"/>
+        <path class="s6-wave w3" d="M184 108 Q216 138 184 168"/>
+        <g class="s6-seeker">
+          <circle class="fillsh" cx="250" cy="150" r="18"/>
+          <rect x="230" y="145" width="40" height="11" rx="4" fill="var(--team-blue)"/>
+          <rect class="fillsh" x="236" y="170" width="28" height="62" rx="14"/>
+          <line class="lart" x1="244" y1="232" x2="240" y2="292"/>
+          <line class="lart" x1="256" y1="232" x2="262" y2="292"/>
+          <path class="lart" d="M264 182 Q296 172 322 168"/>
+          <path class="lart" d="M264 192 Q298 190 324 190"/>
+        </g>
+        <line class="lart" x1="410" y1="150" x2="410" y2="292"/>
+        <path class="s6-flag" d="M410 150 L450 163 L410 178 Z" fill="var(--team-red)"/>
+      </svg>
+    </div>
+    <div class="challenge-copy">
+      <ul class="rules">
+        <li>Squads split into <b>callers and seekers</b>, swapping roles as they go, max <b>3 seekers</b> in the field at once.</li>
+        <li>Seekers are <b>blindfolded</b> and must locate flags scattered across the field.</li>
+        <li>Callers stay <b>outside the boundary</b> and steer their seeker using <b>voice only</b>.</li>
+        <li>Listen closely, find a flag, and carry it safely back.</li>
+        <li>Return a flag, then <b>tag in</b> the next teammate.</li>
+      </ul>
+      <div class="score-tag">5 points per flag before time is called</div>
+    </div>
+  </div>
+</section>
+<section class="slide" id="slide7">
+  <div class="eyebrow">ROMANS 15:13
+    <span class="loc-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg> The Lake</span>
+  </div>
+  <h1 class="slide-title">Overflowing!</h1>
+  <div class="challenge-grid">
+    <div class="illo-pane">
+      <svg viewBox="0 0 480 360" aria-hidden="true">
+        <line class="ground" x1="30" y1="302" x2="452" y2="302"/>
+        <circle class="fillsh" cx="52" cy="196" r="15"/>
+        <rect class="fillsh" x="40" y="212" width="24" height="52" rx="12"/>
+        <line class="lart" x1="48" y1="264" x2="44" y2="298"/>
+        <line class="lart" x1="58" y1="264" x2="64" y2="298"/>
+        <line class="lart" x1="62" y1="226" x2="98" y2="246"/>
+        <path class="fillsh" d="M96 268 L136 268 L116 240 Z"/>
+        <line class="s7-lever lart" x1="72" y1="256" x2="168" y2="232"/>
+        <g class="s7-cup">
+          <path d="M150 214 L176 214 L171 244 L155 244 Z" fill="var(--team-blue)"/>
+          <path class="lart" d="M150 214 L176 214 L171 244 L155 244 Z" stroke-width="4"/>
+          <path d="M155 220 Q163 226 171 220" fill="none" stroke="#bfe0ff" stroke-width="3" stroke-linecap="round"/>
+        </g>
+        <rect class="fillsh" x="338" y="96" width="46" height="200" rx="22"/>
+        <circle class="s7-sph" cx="361" cy="278" r="12" fill="var(--team-red)"/>
+        <circle class="s7-sph r2" cx="361" cy="278" r="12" fill="var(--team-yellow)"/>
+        <circle class="s7-sph r3" cx="361" cy="278" r="12" fill="var(--team-green)"/>
+      </svg>
+    </div>
+    <div class="challenge-copy">
+      <ul class="rules">
+        <li>One player at a time <b>fills a cup</b> with water.</li>
+        <li>Before the run, <b>catapult the cup</b> skyward and catch it, <b>no spilling</b>.</li>
+        <li>Relay the caught cup to your squad's tube and <b>pour it in</b>.</li>
+        <li>Rising water lifts the spheres until they <b>float out the top</b>.</li>
+        <li><b>No hands on the spheres</b>, water does the work.</li>
+      </ul>
+      <div class="score-tag">5 points per sphere that floats out of the tube</div>
+    </div>
+  </div>
+</section>
+<section class="slide" id="slide8">
+  <div class="eyebrow">PHILIPPIANS 3:14
+    <span class="loc-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg> Dining Hall Porch</span>
+  </div>
+  <h1 class="slide-title">Upward Call</h1>
+  <div class="challenge-grid">
+    <div class="illo-pane">
+      <svg viewBox="0 0 480 360" aria-hidden="true">
+        <line class="ground" x1="30" y1="302" x2="452" y2="302"/>
+        <path class="fillsh" d="M78 224 A92 22 0 0 0 262 224 L246 286 A70 16 0 0 1 96 286 Z"/>
+        <ellipse class="lart" cx="170" cy="224" rx="92" ry="22"/>
+        <circle class="s8-bob" cx="132" cy="222" r="12" fill="var(--team-red)"/>
+        <circle class="s8-bob b2" cx="168" cy="228" r="12" fill="var(--team-blue)"/>
+        <circle class="s8-bob b3" cx="204" cy="222" r="12" fill="var(--team-green)"/>
+        <circle class="s8-bob b2" cx="150" cy="230" r="10" fill="var(--team-yellow)"/>
+        <path class="fillsh" d="M346 250 L420 250 L410 300 L356 300 Z"/>
+        <ellipse cx="383" cy="250" rx="37" ry="10" fill="none" stroke="var(--team-green)" stroke-width="6"/>
+        <circle cx="374" cy="278" r="10" fill="var(--team-blue)"/>
+        <circle cx="394" cy="282" r="10" fill="var(--team-red)"/>
+        <g class="s8-lift">
+          <line class="lart" x1="150" y1="150" x2="172" y2="212" stroke="var(--team-yellow)" stroke-width="5"/>
+          <line class="lart" x1="192" y1="150" x2="180" y2="212" stroke="var(--team-yellow)" stroke-width="5"/>
+          <circle cx="176" cy="216" r="11" fill="var(--team-red)"/>
+        </g>
+      </svg>
+    </div>
+    <div class="challenge-copy">
+      <ul class="rules">
+        <li>Every player gets <b>one pair of chopsticks</b>.</li>
+        <li>Work together to lift spheres <b>up and out of the pit</b>, chopsticks only.</li>
+        <li><b>No hands</b> on the spheres or the pit.</li>
+        <li>Once a sphere clears the top, guide it <b>into the team bucket</b>.</li>
+        <li>Keep going until every sphere is moved or <b>time runs out</b>.</li>
+      </ul>
+      <div class="score-tag">10 points per sphere transferred to the bucket</div>
+    </div>
+  </div>
+</section>
+<section class="slide" id="slide9">
+  <div class="s9-head">
+    <div class="eyebrow">The Finale</div>
+    <h1 class="slide-title">Crack the Cipher</h1>
+  </div>
+
+  <div class="s9-body">
+    <svg class="s9-art" viewBox="0 0 480 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Four color-coded scroll fragments sliding together into one decoded scroll">
+      <circle class="s9-glow" cx="240" cy="180" r="120" fill="var(--cyan)" aria-hidden="true"/>
+
+      <g class="s9-wheel" aria-hidden="true">
+        <circle cx="240" cy="180" r="150" fill="none" stroke="var(--border)" stroke-width="4" stroke-dasharray="10 14"/>
+      </g>
+
+      <rect x="150" y="120" width="180" height="120" rx="10" fill="var(--bg-card)" stroke="var(--text-primary)" stroke-width="6" stroke-linejoin="round"/>
+      <line x1="172" y1="150" x2="308" y2="150" stroke="var(--border)" stroke-width="6" stroke-linecap="round"/>
+      <line x1="172" y1="180" x2="308" y2="180" stroke="var(--border)" stroke-width="6" stroke-linecap="round"/>
+      <line x1="172" y1="210" x2="270" y2="210" stroke="var(--border)" stroke-width="6" stroke-linecap="round"/>
+
+      <g class="s9-frag s9-frag-r" style="--dx:-90px;--dy:-70px;--dr:-14deg;transform-origin:180px 150px;">
+        <rect x="150" y="120" width="46" height="60" rx="6" fill="var(--team-red)" stroke="var(--text-primary)" stroke-width="5" stroke-linejoin="round"/>
+      </g>
+      <g class="s9-frag s9-frag-b" style="--dx:95px;--dy:-66px;--dr:12deg;transform-origin:300px 150px;">
+        <rect x="284" y="120" width="46" height="60" rx="6" fill="var(--team-blue)" stroke="var(--text-primary)" stroke-width="5" stroke-linejoin="round"/>
+      </g>
+      <g class="s9-frag s9-frag-y" style="--dx:-96px;--dy:78px;--dr:13deg;transform-origin:180px 210px;">
+        <rect x="150" y="180" width="46" height="60" rx="6" fill="var(--team-yellow)" stroke="var(--text-primary)" stroke-width="5" stroke-linejoin="round"/>
+      </g>
+      <g class="s9-frag s9-frag-g" style="--dx:92px;--dy:82px;--dr:-12deg;transform-origin:300px 210px;">
+        <rect x="284" y="180" width="46" height="60" rx="6" fill="var(--team-green)" stroke="var(--text-primary)" stroke-width="5" stroke-linejoin="round"/>
+      </g>
+    </svg>
+
+    <div class="s9-right">
+      <ul class="s9-steps">
+        <li>Each finished challenge hands your squad <b>one cipher piece</b>.</li>
+        <li>Your final challenge hands over a <b>coded piece of Scripture</b>.</li>
+        <li>Head to the <b>lakefront</b> and use your cipher pieces to decode it.</li>
+        <li>Squads on the same color team <b>arrange the pieces in order</b>.</li>
+        <li>Read the full Scripture <b>aloud</b>, and when it's right, your team's <b>timer stops</b>.</li>
+      </ul>
+
+      <div class="s9-score-title">Team Scoring</div>
+      <div class="s9-ranks">
+        <div class="s9-rank gold">
+          <span class="place">1st</span>
+          <span class="pts">100</span>
+          <span class="lbl">points</span>
+        </div>
+        <div class="s9-rank silver">
+          <span class="place">2nd</span>
+          <span class="pts">75</span>
+          <span class="lbl">points</span>
+        </div>
+        <div class="s9-rank bronze">
+          <span class="place">3rd</span>
+          <span class="pts">50</span>
+          <span class="lbl">points</span>
+        </div>
+        <div class="s9-rank fourth">
+          <span class="place">4th</span>
+          <span class="pts">25</span>
+          <span class="lbl">points</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="slide10">
+  <div class="s10-stage">
+    <svg class="s10-burst" viewBox="0 0 800 500" aria-hidden="true">
+      <circle class="s10-core" cx="400" cy="250" r="210"/>
+      <g class="s10-rays">
+        <line class="s10-ray r" x1="400" y1="185" x2="400" y2="70" transform="rotate(0 400 250)"/>
+        <line class="s10-ray b" x1="400" y1="185" x2="400" y2="70" transform="rotate(22.5 400 250)"/>
+        <line class="s10-ray y" x1="400" y1="185" x2="400" y2="70" transform="rotate(45 400 250)"/>
+        <line class="s10-ray g" x1="400" y1="185" x2="400" y2="70" transform="rotate(67.5 400 250)"/>
+        <line class="s10-ray r" x1="400" y1="185" x2="400" y2="70" transform="rotate(90 400 250)"/>
+        <line class="s10-ray b" x1="400" y1="185" x2="400" y2="70" transform="rotate(112.5 400 250)"/>
+        <line class="s10-ray y" x1="400" y1="185" x2="400" y2="70" transform="rotate(135 400 250)"/>
+        <line class="s10-ray g" x1="400" y1="185" x2="400" y2="70" transform="rotate(157.5 400 250)"/>
+        <line class="s10-ray r" x1="400" y1="185" x2="400" y2="70" transform="rotate(180 400 250)"/>
+        <line class="s10-ray b" x1="400" y1="185" x2="400" y2="70" transform="rotate(202.5 400 250)"/>
+        <line class="s10-ray y" x1="400" y1="185" x2="400" y2="70" transform="rotate(225 400 250)"/>
+        <line class="s10-ray g" x1="400" y1="185" x2="400" y2="70" transform="rotate(247.5 400 250)"/>
+        <line class="s10-ray r" x1="400" y1="185" x2="400" y2="70" transform="rotate(270 400 250)"/>
+        <line class="s10-ray b" x1="400" y1="185" x2="400" y2="70" transform="rotate(292.5 400 250)"/>
+        <line class="s10-ray y" x1="400" y1="185" x2="400" y2="70" transform="rotate(315 400 250)"/>
+        <line class="s10-ray g" x1="400" y1="185" x2="400" y2="70" transform="rotate(337.5 400 250)"/>
+      </g>
+      <g>
+        <rect class="s10-confetti" style="--dx:-300px;--dy:-150px;" x="392" y="242" width="20" height="12" rx="2" fill="var(--team-red)"/>
+        <rect class="s10-confetti" style="--dx:290px;--dy:-140px;" x="392" y="242" width="20" height="12" rx="2" fill="var(--team-blue)"/>
+        <circle class="s10-confetti" style="--dx:-260px;--dy:150px;" cx="400" cy="250" r="8" fill="var(--team-yellow)"/>
+        <rect class="s10-confetti" style="--dx:270px;--dy:160px;" x="392" y="242" width="14" height="14" rx="2" fill="var(--team-green)"/>
+        <rect class="s10-confetti" style="--dx:-340px;--dy:40px;" x="392" y="242" width="18" height="10" rx="2" fill="var(--team-yellow)"/>
+        <circle class="s10-confetti" style="--dx:330px;--dy:30px;" cx="400" cy="250" r="7" fill="var(--team-red)"/>
+        <rect class="s10-confetti" style="--dx:-140px;--dy:-200px;" x="392" y="242" width="16" height="16" rx="2" fill="var(--team-green)"/>
+        <rect class="s10-confetti" style="--dx:150px;--dy:-210px;" x="392" y="242" width="14" height="10" rx="2" fill="var(--team-blue)"/>
+        <circle class="s10-confetti" style="--dx:120px;--dy:200px;" cx="400" cy="250" r="8" fill="var(--team-yellow)"/>
+        <rect class="s10-confetti" style="--dx:-130px;--dy:205px;" x="392" y="242" width="18" height="12" rx="2" fill="var(--team-blue)"/>
+        <rect class="s10-confetti" style="--dx:210px;--dy:-90px;" x="392" y="242" width="12" height="12" rx="2" fill="var(--team-red)"/>
+        <circle class="s10-confetti" style="--dx:-210px;--dy:-80px;" cx="400" cy="250" r="7" fill="var(--team-green)"/>
+      </g>
+    </svg>
+    <div class="s10-title-wrap">
+      <h1 class="s10-title">May the Best<br>Team Win!</h1>
+    </div>
+  </div>
+  <p class="s10-subtitle">Grab your colors. <span class="em">Let the games begin!</span></p>
+  <div class="s10-flags" aria-hidden="true">
+    <svg class="s10-flag" viewBox="0 0 60 80">
+      <defs>
+        <linearGradient id="s10Sheen1" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".4"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+        </linearGradient>
+        <clipPath id="s10Clip1"><path d="M0 0 L38 0 L30 14 L38 28 L0 28 Z"/></clipPath>
+      </defs>
+      <line class="pole" x1="14" y1="8" x2="14" y2="76"/>
+      <g transform="translate(14,12)">
+        <g class="s10-cloth-g" style="transform-origin:0px 0px;">
+          <g clip-path="url(#s10Clip1)">
+            <rect class="flag-band" x="0"  y="-6" width="8" height="40" fill="var(--team-red)" style="--amp:.5;--sk:.4;--d:0s"/>
+            <rect class="flag-band" x="6"  y="-6" width="8" height="40" fill="var(--team-red)" style="--amp:1.4;--sk:1;--d:-.16s"/>
+            <rect class="flag-band" x="12" y="-6" width="8" height="40" fill="var(--team-red)" style="--amp:2.4;--sk:1.6;--d:-.32s"/>
+            <rect class="flag-band" x="18" y="-6" width="8" height="40" fill="var(--team-red)" style="--amp:3.4;--sk:2.2;--d:-.48s"/>
+            <rect class="flag-band" x="24" y="-6" width="8" height="40" fill="var(--team-red)" style="--amp:4.5;--sk:2.8;--d:-.64s"/>
+            <rect class="flag-band" x="30" y="-6" width="9" height="40" fill="var(--team-red)" style="--amp:5.5;--sk:3.4;--d:-.8s"/>
+            <rect class="flag-sheen" x="-4" y="-6" width="12" height="40" fill="url(#s10Sheen1)" style="--sx0:-4px;--sx1:44px"/>
+          </g>
+          <path class="flag-outline" d="M0 0 L38 0 L30 14 L38 28 L0 28 Z"/>
+        </g>
+      </g>
+    </svg>
+    <svg class="s10-flag" viewBox="0 0 60 80">
+      <defs>
+        <linearGradient id="s10Sheen2" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".4"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+        </linearGradient>
+        <clipPath id="s10Clip2"><path d="M0 0 L38 0 L30 14 L38 28 L0 28 Z"/></clipPath>
+      </defs>
+      <line class="pole" x1="14" y1="8" x2="14" y2="76"/>
+      <g transform="translate(14,12)">
+        <g class="s10-cloth-g" style="transform-origin:0px 0px;">
+          <g clip-path="url(#s10Clip2)">
+            <rect class="flag-band" x="0"  y="-6" width="8" height="40" fill="var(--team-blue)" style="--amp:.5;--sk:.4;--d:-.32s"/>
+            <rect class="flag-band" x="6"  y="-6" width="8" height="40" fill="var(--team-blue)" style="--amp:1.4;--sk:1;--d:-.48s"/>
+            <rect class="flag-band" x="12" y="-6" width="8" height="40" fill="var(--team-blue)" style="--amp:2.4;--sk:1.6;--d:-.64s"/>
+            <rect class="flag-band" x="18" y="-6" width="8" height="40" fill="var(--team-blue)" style="--amp:3.4;--sk:2.2;--d:-.8s"/>
+            <rect class="flag-band" x="24" y="-6" width="8" height="40" fill="var(--team-blue)" style="--amp:4.5;--sk:2.8;--d:-.96s"/>
+            <rect class="flag-band" x="30" y="-6" width="9" height="40" fill="var(--team-blue)" style="--amp:5.5;--sk:3.4;--d:-1.12s"/>
+            <rect class="flag-sheen" x="-4" y="-6" width="12" height="40" fill="url(#s10Sheen2)" style="--sx0:-4px;--sx1:44px"/>
+          </g>
+          <path class="flag-outline" d="M0 0 L38 0 L30 14 L38 28 L0 28 Z"/>
+        </g>
+      </g>
+    </svg>
+    <svg class="s10-flag" viewBox="0 0 60 80">
+      <defs>
+        <linearGradient id="s10Sheen3" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".4"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+        </linearGradient>
+        <clipPath id="s10Clip3"><path d="M0 0 L38 0 L30 14 L38 28 L0 28 Z"/></clipPath>
+      </defs>
+      <line class="pole" x1="14" y1="8" x2="14" y2="76"/>
+      <g transform="translate(14,12)">
+        <g class="s10-cloth-g" style="transform-origin:0px 0px;">
+          <g clip-path="url(#s10Clip3)">
+            <rect class="flag-band" x="0"  y="-6" width="8" height="40" fill="var(--team-yellow)" style="--amp:.5;--sk:.4;--d:-.64s"/>
+            <rect class="flag-band" x="6"  y="-6" width="8" height="40" fill="var(--team-yellow)" style="--amp:1.4;--sk:1;--d:-.8s"/>
+            <rect class="flag-band" x="12" y="-6" width="8" height="40" fill="var(--team-yellow)" style="--amp:2.4;--sk:1.6;--d:-.96s"/>
+            <rect class="flag-band" x="18" y="-6" width="8" height="40" fill="var(--team-yellow)" style="--amp:3.4;--sk:2.2;--d:-1.12s"/>
+            <rect class="flag-band" x="24" y="-6" width="8" height="40" fill="var(--team-yellow)" style="--amp:4.5;--sk:2.8;--d:-1.28s"/>
+            <rect class="flag-band" x="30" y="-6" width="9" height="40" fill="var(--team-yellow)" style="--amp:5.5;--sk:3.4;--d:-1.44s"/>
+            <rect class="flag-sheen" x="-4" y="-6" width="12" height="40" fill="url(#s10Sheen3)" style="--sx0:-4px;--sx1:44px"/>
+          </g>
+          <path class="flag-outline" d="M0 0 L38 0 L30 14 L38 28 L0 28 Z"/>
+        </g>
+      </g>
+    </svg>
+    <svg class="s10-flag" viewBox="0 0 60 80">
+      <defs>
+        <linearGradient id="s10Sheen4" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".4"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+        </linearGradient>
+        <clipPath id="s10Clip4"><path d="M0 0 L38 0 L30 14 L38 28 L0 28 Z"/></clipPath>
+      </defs>
+      <line class="pole" x1="14" y1="8" x2="14" y2="76"/>
+      <g transform="translate(14,12)">
+        <g class="s10-cloth-g" style="transform-origin:0px 0px;">
+          <g clip-path="url(#s10Clip4)">
+            <rect class="flag-band" x="0"  y="-6" width="8" height="40" fill="var(--team-green)" style="--amp:.5;--sk:.4;--d:-.96s"/>
+            <rect class="flag-band" x="6"  y="-6" width="8" height="40" fill="var(--team-green)" style="--amp:1.4;--sk:1;--d:-1.12s"/>
+            <rect class="flag-band" x="12" y="-6" width="8" height="40" fill="var(--team-green)" style="--amp:2.4;--sk:1.6;--d:-1.28s"/>
+            <rect class="flag-band" x="18" y="-6" width="8" height="40" fill="var(--team-green)" style="--amp:3.4;--sk:2.2;--d:-1.44s"/>
+            <rect class="flag-band" x="24" y="-6" width="8" height="40" fill="var(--team-green)" style="--amp:4.5;--sk:2.8;--d:-1.6s"/>
+            <rect class="flag-band" x="30" y="-6" width="9" height="40" fill="var(--team-green)" style="--amp:5.5;--sk:3.4;--d:-1.76s"/>
+            <rect class="flag-sheen" x="-4" y="-6" width="12" height="40" fill="url(#s10Sheen4)" style="--sx0:-4px;--sx1:44px"/>
+          </g>
+          <path class="flag-outline" d="M0 0 L38 0 L30 14 L38 28 L0 28 Z"/>
+        </g>
+      </g>
+    </svg>
+  </div>
+</section>
+</div>
+
+<nav id="navdots" aria-label="Slide navigation"></nav>
+
+<script>
+(function(){
+  var slides=Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var idx=0;
+  var dotsWrap=document.getElementById('navdots');
+  slides.forEach(function(s,i){
+    var b=document.createElement('button');
+    b.type='button';b.setAttribute('aria-label','Go to slide '+(i+1));
+    b.addEventListener('click',function(){go(i)});
+    dotsWrap.appendChild(b);
+  });
+  function render(){
+    slides.forEach(function(s,i){s.classList.toggle('active',i===idx)});
+    Array.prototype.forEach.call(dotsWrap.children,function(d,i){
+      if(i===idx)d.setAttribute('aria-current','true');else d.removeAttribute('aria-current');
+    });
+    document.getElementById('counter').textContent=String(idx+1).padStart(2,'0')+' / '+String(slides.length).padStart(2,'0');
+  }
+  function go(i){idx=Math.max(0,Math.min(slides.length-1,i));render()}
+  document.getElementById('prevBtn').addEventListener('click',function(){go(idx-1)});
+  document.getElementById('nextBtn').addEventListener('click',function(){go(idx+1)});
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){go(idx+1);e.preventDefault()}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){go(idx-1);e.preventDefault()}
+    else if(e.key==='Home')go(0);
+    else if(e.key==='End')go(slides.length-1);
+    else if(e.key==='f'||e.key==='F')toggleFs();
+  });
+  function toggleFs(){
+    if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(function(){});
+    else document.exitFullscreen();
+  }
+  document.getElementById('fsBtn').addEventListener('click',toggleFs);
+  render();
+})();
+</script>
+</body>
+</html>
