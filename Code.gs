@@ -181,7 +181,7 @@ function isBlank_(v) {
 
 function doGet(e) {
   var page = (e && e.parameter && e.parameter.page) ? String(e.parameter.page) : "";
-  var name = (page === "dashboard") ? "Dashboard" : (page === "plunger") ? "GoldenPlunger" : "Entry";
+  var name = (page === "dashboard") ? "Dashboard" : "Entry";
   var template = HtmlService.createTemplateFromFile(name);
   // Entry.html's dashboard link needs the real /exec URL: the page renders
   // inside a sandboxed googleusercontent.com iframe, so a relative href
@@ -531,31 +531,6 @@ function setTieOrder(day, ageGroup, orderedCabinCodes) {
   }
 
   return {ok: true};
-}
-
-// Golden Plunger: one fullscreen announcement page reused every day. It has
-// no day selector of its own, so it auto-detects the latest day that has any
-// scored rows (last entry in DAYS order with data) and returns that day's
-// per-age-group winners, same shape as getRankings(day).winners.
-function getGoldenPlungerData() {
-  var allRows = readRows_();
-  var latestDay = null;
-  for (var i = DAYS.length - 1; i >= 0; i--) {
-    var hasData = allRows.some(function (r) { return r.day === DAYS[i]; });
-    if (hasData) {
-      latestDay = DAYS[i];
-      break;
-    }
-  }
-  if (!latestDay) {
-    return {day: null, winners: {}, unresolvedTies: []};
-  }
-  var rankings = getRankings(latestDay);
-  return {
-    day: latestDay,
-    winners: rankings.winners,
-    unresolvedTies: rankings.unresolvedTies
-  };
 }
 
 function getWeekSummary() {

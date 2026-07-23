@@ -283,10 +283,11 @@ body.presenting .statusbar,
 body.presenting .chartcard,
 body.presenting .winners,
 body.presenting .bunting,
+body.presenting #revealHint,
 body.presenting footer{display:none}
 body.presenting{height:100vh;overflow:hidden}
 body.presenting .wrap{max-width:none;padding:2.5rem 3rem;height:100vh;display:flex;flex-direction:column;box-sizing:border-box}
-body.presenting #perDayContent{flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
+body.presenting #perDayContent:not([hidden]){flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
 body.presenting .boards{flex:1 1 auto;min-height:0;align-items:stretch}
 body.presenting .board{display:flex;flex-direction:column;min-height:0}
 body.presenting .wcard .cells{display:none}
@@ -299,78 +300,106 @@ body.presenting .board th{font-size:.85rem}
 body.presenting .board td{font-size:1.25rem;padding:.55rem .4rem}
 body.presenting .board td.cb{font-size:1.4rem}
 
-/* ---------- Golden Plunger mode ---------- */
-.plunger-controls{position:fixed;top:1.1rem;right:1.25rem;z-index:50;display:none;gap:.6rem}
 .btn.btn-icon{padding:.5rem .7rem}
-.ic-plunger{width:auto;height:1.5em;aspect-ratio:889/500}
-#plungerView{display:none;flex-direction:column;height:100vh;overflow:hidden;
-  padding:clamp(1rem,2.5vh,2rem) clamp(1rem,3vw,2.5rem)}
-body.plunger{height:100vh;overflow:hidden}
-body.plunger .bunting{display:none}
-body.plunger .wrap{max-width:none;margin:0;padding:0;height:100vh}
-body.plunger .wrap>*{display:none}
-body.plunger #plungerControls{display:flex}
-body.plunger #plungerView{display:flex}
 
-#plungerStage[hidden],#plungerSplash[hidden],#plungerDayhead[hidden]{display:none}
-.plunger-svg{overflow:visible}
-.plunger{width:auto;height:clamp(4rem,14vh,9rem);aspect-ratio:889/500;flex:0 0 auto;
-  filter:drop-shadow(0 6px 14px rgba(0,0,0,.35))}
-.plunger.dim{opacity:.32;filter:none}
+/* ---------- Golden Plunger reveal announcement (Presentation Mode) ---------- */
+#plungerAnnounce{display:none;position:fixed;inset:0;z-index:40;flex-direction:column;align-items:center;justify-content:center;
+  gap:.5rem;text-align:center;overflow:hidden;padding:2rem;
+  background:radial-gradient(ellipse at 50% 45%,rgba(24,30,44,.97) 0%,rgba(5,7,12,.99) 72%)}
+body.presenting #plungerAnnounce:not([hidden]){display:flex;animation:paShake .32s linear 1.85s}
+.pa-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;animation:paFlash .9s ease-out 1.85s both}
+.pa-gname{font-family:var(--sans);font-weight:800;color:var(--g,var(--text-secondary));font-size:clamp(1.1rem,2.6vh,2rem);
+  letter-spacing:.14em;text-transform:uppercase;animation:paFadeIn .3s ease both}
+.pa-kicker{font-family:var(--sans);color:var(--accent-yellow);font-weight:700;font-size:clamp(1.3rem,3.4vh,2.6rem);
+  letter-spacing:.2em;text-transform:uppercase;animation:paKickerPulse 1.1s ease both}
+.pa-dropzone{position:relative;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+  width:100%;height:min(50vh,42vw)}
+.pa-plunger{width:auto;height:min(50vh,42vw);aspect-ratio:889/500;
+  filter:drop-shadow(0 22px 50px rgba(0,0,0,.6)) drop-shadow(0 0 100px rgba(251,204,52,.5));
+  animation:paLoom .9s cubic-bezier(.31,.03,.35,1) 1.1s both}
+.pa-onomatopoeia{position:absolute;top:8%;right:6%;font-family:var(--sans);font-weight:800;color:var(--medal-gold);
+  font-size:clamp(1.8rem,5vh,3.6rem);letter-spacing:.02em;transform:rotate(-9deg);text-shadow:0 4px 0 rgba(0,0,0,.4);
+  opacity:0;animation:paSfx .8s ease-out 1.85s both}
+.pa-cabin{font-family:var(--sans);font-weight:800;color:var(--medal-gold);font-size:clamp(3.2rem,min(12vh,10vw),8.5rem);
+  line-height:1;animation:paCabinSlam .55s cubic-bezier(.2,.85,.25,1.4) 2.05s both}
+.pa-score{display:flex;gap:.5rem;align-items:baseline;justify-content:center;animation:paFadeUp .5s ease 2.55s both}
+.pa-score b{font-size:clamp(1.6rem,4vh,3rem);font-weight:800;color:var(--g,var(--medal-gold))}
+.pa-score span{font-size:clamp(1rem,2.2vh,1.8rem);color:var(--text-secondary);font-weight:600}
+.pa-citation{max-width:44ch;font-style:italic;color:var(--text-primary);font-size:clamp(1.05rem,2.4vh,1.8rem);
+  line-height:1.3;animation:paFadeUp .5s ease 2.85s both}
+.pa-confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.pa-confetti i{position:absolute;top:-5%;width:.6rem;height:1rem;border-radius:2px;opacity:0;
+  animation:paConfettiFall 1.4s ease-in both}
+.pa-confetti i:nth-child(odd){border-radius:50%}
 
-.plunger-dayhead{text-align:center;flex:0 0 auto;padding:.2rem 1rem clamp(.4rem,1.5vh,1rem)}
-.plunger-dayhead h2{font-size:clamp(2rem,6vh,5.5rem);font-weight:800;letter-spacing:-.01em;line-height:1.05}
-.plunger-dayhead h2 em{font-style:normal;color:var(--medal-gold)}
-
-.plunger-stage{flex:1 1 auto;display:grid;grid-template-columns:repeat(3,1fr);
-  gap:clamp(.8rem,1.6vw,1.4rem);align-items:stretch;min-height:0}
-.pl-award{position:relative;background:var(--bg-card);border:1px solid var(--border);border-top:6px solid var(--g);
-  border-radius:var(--radius);padding:clamp(.7rem,1.6vh,1.3rem) clamp(1rem,1.8vw,1.6rem);
-  display:flex;flex-direction:column;min-height:0;overflow:hidden}
-.pl-award.prov{border-top-style:dashed;border-top-color:var(--accent-yellow)}
-.pl-head{display:flex;align-items:center;gap:.5rem;flex:0 0 auto;margin-bottom:.4rem}
-.pl-head .pl-gname{font-weight:800;font-size:clamp(1.3rem,3vh,3rem);color:var(--g);letter-spacing:.01em}
-.pl-head .pl-tag{margin-left:auto;font-family:var(--sans);font-size:clamp(.8rem,1.4vh,1.4rem);font-weight:600;
-  letter-spacing:.14em;text-transform:uppercase;color:var(--text-secondary);text-align:right;line-height:1.2}
-.pl-body{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:clamp(.35rem,1.2vh,.9rem);min-height:0;text-align:center}
-.pl-body.empty{gap:.6rem}
-.pl-cabin{font-family:var(--sans);font-weight:800;font-size:clamp(2.4rem,8vh,7rem);line-height:.95;
-  letter-spacing:.01em;color:var(--text-primary)}
-.pl-score{display:flex;align-items:baseline;gap:.4rem}
-.pl-score b{font-size:clamp(1.5rem,4vh,3.5rem);font-weight:800;color:var(--g);line-height:1}
-.pl-score span{font-size:clamp(1rem,2vh,2rem);color:var(--text-secondary);font-weight:600}
-.pl-citation{font-style:italic;color:var(--text-primary);font-size:clamp(1rem,2.2vh,2.2rem);line-height:1.3;
-  max-width:28ch;margin-top:.1rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.pl-empty-title{font-weight:700;font-size:clamp(1.5rem,3.5vh,3.2rem);color:var(--text-primary)}
-.pl-empty-sub{color:var(--text-secondary);font-size:clamp(1rem,2.2vh,2.4rem);max-width:24ch}
-.pl-badge{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--sans);font-weight:600;
-  font-size:clamp(.75rem,1.4vh,1.2rem);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;
-  color:var(--accent-yellow);background:color-mix(in srgb,var(--accent-yellow) 12%,transparent);
-  border:1px solid color-mix(in srgb,var(--accent-yellow) 45%,transparent);padding:.3rem .7rem;border-radius:999px}
-.pl-badge svg{width:1em;height:1em;fill:var(--accent-yellow)}
-
-.plunger-splash{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:clamp(.6rem,2vh,1.4rem);text-align:center;padding:1rem 1.5rem;min-height:0}
-.plunger-splash .plunger{height:clamp(6rem,18vh,12rem);animation:plbob 3s ease-in-out infinite}
-.plunger-splash h2{font-size:clamp(2rem,6.5vh,7rem);font-weight:800;letter-spacing:-.01em;line-height:1.12}
-.plunger-splash h2 em{font-style:normal;color:var(--medal-gold)}
-.plunger-splash p{color:var(--text-primary);font-size:clamp(1.2rem,3vh,3rem);line-height:1.3;max-width:46ch}
-.plunger-kicker{font-family:var(--sans);color:var(--accent-yellow);font-size:clamp(1rem,2vh,1.8rem);
-  font-weight:600;letter-spacing:.24em;text-transform:uppercase}
-
-@keyframes plbob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-12px) rotate(2deg)}}
-@keyframes plreveal{0%{opacity:0;transform:translateY(16px) scale(.96)}60%{transform:translateY(-5px) scale(1.012)}100%{opacity:1;transform:none}}
-@keyframes plplunge{0%{transform:translateY(-14px) rotate(-6deg)}45%{transform:translateY(6px) rotate(1deg)}70%{transform:translateY(-2px)}100%{transform:none}}
-.pl-award.reveal{animation:plreveal .7s cubic-bezier(.2,.8,.2,1)}
-.pl-award.reveal .plunger{animation:plplunge .75s ease}
+@keyframes paFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes paFadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes paKickerPulse{0%{opacity:0;transform:scale(.94)}30%{opacity:1;transform:scale(1)}45%{transform:scale(1.04)}60%{transform:scale(1)}100%{opacity:1;transform:scale(1)}}
+@keyframes paLoom{
+  0%{transform:translateY(-160vh) scale(.12) rotate(-30deg);opacity:0}
+  40%{transform:translateY(-6%) scale(1.08) rotate(3deg);opacity:1}
+  58%{transform:translateY(-4%) scale(1.1) rotate(1deg)}
+  78%{transform:translateY(4%) scaleY(.78) scaleX(1.2) rotate(0deg)}
+  88%{transform:translateY(-2%) scaleY(1.06) scaleX(.96)}
+  100%{transform:none;opacity:1}
+}
+@keyframes paShake{
+  0%,100%{transform:translate(0,0)}
+  15%{transform:translate(-14px,4px)}30%{transform:translate(12px,-3px)}45%{transform:translate(-9px,3px)}
+  60%{transform:translate(7px,-2px)}75%{transform:translate(-4px,1px)}90%{transform:translate(2px,0)}
+}
+@keyframes paFlash{0%{opacity:0}8%{opacity:.85}100%{opacity:0}}
+@keyframes paSfx{0%{opacity:0;transform:rotate(-9deg) scale(.4)}25%{opacity:1;transform:rotate(-9deg) scale(1.15)}40%{transform:rotate(-9deg) scale(1)}75%{opacity:1}100%{opacity:0;transform:rotate(-9deg) scale(1) translateY(-16px)}}
+@keyframes paCabinSlam{0%{transform:scale(2.6);opacity:0}55%{transform:scale(.93);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes paConfettiFall{
+  0%{opacity:1;transform:translateY(0) rotate(0deg)}
+  100%{opacity:0;transform:translateY(70vh) rotate(360deg)}
+}
 
 @media (prefers-reduced-motion:reduce){
-  .pl-award.reveal,.pl-award.reveal .plunger,.plunger-splash .plunger{animation:none!important}
+  #plungerAnnounce,.pa-plunger,.pa-cabin,.pa-gname,.pa-score,.pa-citation,.pa-kicker,.pa-flash,.pa-onomatopoeia,.pa-confetti i{animation:none!important;opacity:1!important;transform:none!important}
 }
+/* ---------- How scoring works (info modal) ---------- */
+.howback{position:fixed;inset:0;z-index:80;background:rgba(3,6,12,.72);
+  display:flex;align-items:center;justify-content:center;padding:1.25rem}
+.howback[hidden]{display:none}
+.howcard{position:relative;width:100%;max-width:30rem;max-height:88vh;overflow-y:auto;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:1.6rem 1.7rem 1.4rem}
+.howclose{position:absolute;top:.7rem;right:.7rem;width:2.2rem;height:2.2rem;border-radius:50%;
+  border:1px solid var(--border);background:var(--bg-code);color:var(--text-secondary);
+  display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.howclose:hover{border-color:var(--cyan);color:var(--cyan)}
+.howclose .ic{width:1rem;height:1rem}
+.how-slide[hidden]{display:none}
+.how-slide h2{font-size:1.3rem;font-weight:700;color:var(--cyan);padding-right:2rem;margin-bottom:.6rem}
+.how-slide p{color:var(--text-primary);font-size:1rem;line-height:1.55;margin-bottom:.7rem}
+.how-icons{display:flex;justify-content:center;gap:.6rem;flex-wrap:wrap;margin:1rem 0}
+.how-cat{display:flex;flex-direction:column;align-items:center;gap:.35rem;width:4.2rem}
+.how-cat .cell{width:2.6rem;height:2.6rem;border-radius:.6rem;background:var(--gamma);
+  display:flex;align-items:center;justify-content:center}
+.how-cat .cell svg{width:62%;height:62%;color:color-mix(in srgb, var(--gamma) 30%, black)}
+.how-cat span{font-family:var(--sans);font-weight:700;font-size:.62rem;letter-spacing:.03em;
+  text-transform:uppercase;color:var(--text-secondary);text-align:center;line-height:1.2}
+.how-scale{display:flex;flex-direction:column;gap:.5rem;margin:.9rem 0 1.1rem;
+  padding:.8rem .9rem;border:1px solid var(--border-subtle);border-radius:var(--radius);background:var(--bg-code)}
+.how-scale div{display:flex;align-items:center;gap:.6rem;font-size:.92rem;color:var(--text-primary)}
+.how-scale i{width:1.5rem;height:1.5rem;border-radius:.4rem;flex:0 0 auto;display:inline-flex;
+  align-items:center;justify-content:center;font-style:normal;font-family:var(--sans);font-weight:800;
+  font-size:.85rem;color:var(--bg-page)}
+.how-scale i.v0{background:var(--alpha)}
+.how-scale i.v1{background:var(--accent-yellow)}
+.how-scale i.v2{background:var(--gamma)}
+.how-sparkle{display:flex;justify-content:center;margin:.3rem 0 1rem}
+.how-sparkle svg{width:3.4rem;height:3.4rem;fill:var(--accent-yellow)}
+.hownav{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-top:1.2rem}
+#howBackBtn[hidden]{display:none}
+.howdots{display:flex;gap:.5rem}
+.howdot{width:9px;height:9px;border-radius:50%;background:var(--border);border:0;padding:0;cursor:pointer}
+.howdot[aria-current="true"]{background:var(--cyan)}
 @media (forced-colors:active){
-  .pl-award{border:1px solid ButtonText;border-top-width:6px}
-  .pl-badge{border:1px solid ButtonText}
+  .howcard{border:1px solid ButtonText}
+  .how-scale i{border:1px solid ButtonText}
 }
 </style>
 <script src="mock-gs.js"></script>
@@ -400,11 +429,6 @@ document.documentElement.setAttribute('data-theme','smartos-dark');
     <svg class="cabin-icon" aria-hidden="true"><use href="#i-cabin"/></svg>
     <p class="tagline">Tap to begin</p>
   </div>
-  <div id="plungerControls" class="plunger-controls">
-    <button id="exitPlungerBtn" class="btn" type="button" aria-label="Exit the Golden Plunger view">
-      <svg class="ic" aria-hidden="true"><use href="#i-exit"/></svg><span>Exit</span>
-    </button>
-  </div>
   <header class="top">
     <div class="brand">
       <svg class="cabin-icon" aria-hidden="true"><use href="#i-cabin"/></svg>
@@ -428,11 +452,50 @@ document.documentElement.setAttribute('data-theme','smartos-dark');
       <button id="emceeBtn" class="btn" type="button" aria-label="Open Emcee view">
         <svg class="ic" aria-hidden="true"><use href="#i-emcee"/></svg><span>Emcee view</span>
       </button>
-      <button id="plungerBtn" class="btn btn-icon" type="button" aria-label="Show the Golden Plunger award for the selected day" title="Golden Plunger">
-        <svg class="ic ic-plunger plunger-svg" viewBox="0 0 889 500" aria-hidden="true"><use href="#i-plunger"/></svg>
+      <button id="howBtn" class="btn btn-icon" type="button" aria-label="How scoring works" title="How scoring works">
+        <svg class="ic" aria-hidden="true"><use href="#i-info"/></svg>
       </button>
     </div>
   </header>
+
+  <div id="howBack" class="howback" hidden>
+    <div id="howCard" class="howcard" role="dialog" aria-modal="true" aria-labelledby="howTitle1">
+      <button id="howCloseBtn" class="howclose" type="button" aria-label="Close how scoring works">
+        <svg class="ic" aria-hidden="true"><use href="#i-exit"/></svg>
+      </button>
+
+      <div class="how-slide" id="howSlide1">
+        <h2 id="howTitle1">How We Score Your Cabin</h2>
+        <p>Every day, an inspector checks 5 things in your cabin:</p>
+        <div class="how-icons" id="howIcons"></div>
+        <div class="how-scale">
+          <div><i class="v0">0</i> Needs work</div>
+          <div><i class="v1">1</i> Getting there</div>
+          <div><i class="v2">2</i> Awesome job!</div>
+        </div>
+        <p>Add up all 5 scores, and that&rsquo;s your cabin&rsquo;s Cleanliness score, out of 10 points!</p>
+      </div>
+
+      <div class="how-slide" id="howSlide2" hidden>
+        <h2 id="howTitle2">Sparkle Points &amp; Winning the Day</h2>
+        <div class="how-sparkle">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l1.8 5.6L19 9l-5.2 1.4L12 16l-1.8-5.6L5 9l5.2-1.4z"/></svg>
+        </div>
+        <p>Sparkle is a bonus score that starts at 5. If your cabin really shines, it can go up. If it&rsquo;s a rough day, it can go down a little.</p>
+        <p>Sparkle almost never matters on its own. It&rsquo;s only there to break ties!</p>
+        <p>Each day, the cabin with the highest Cleanliness score wins for its age group. Exactly tied on Cleanliness? Sparkle breaks it. Still tied? The inspector decides by hand.</p>
+      </div>
+
+      <div class="hownav">
+        <button id="howBackBtn" class="btn" type="button" hidden>Back</button>
+        <div class="howdots" role="tablist" aria-label="Slide">
+          <button type="button" class="howdot" data-i="1" aria-current="true" aria-label="Slide 1"></button>
+          <button type="button" class="howdot" data-i="2" aria-label="Slide 2"></button>
+        </div>
+        <button id="howNextBtn" class="btn revealbtn" type="button">Next</button>
+      </div>
+    </div>
+  </div>
 
   <div id="notice" class="notice" role="status" hidden></div>
 
@@ -492,19 +555,10 @@ document.documentElement.setAttribute('data-theme','smartos-dark');
     </button>
   </section>
 
-  <section id="summarySlide" class="summary-slide" aria-label="Final placements, all divisions" hidden></section>
+  <section id="plungerAnnounce" class="plunger-announce" aria-label="Golden Plunger winner announcement" hidden></section>
+  <p id="paSr" class="sr-only" aria-live="assertive"></p>
 
-  <section id="plungerView" class="plunger-view" aria-label="The Golden Plunger, cleanest cabin award">
-    <div id="plungerDayhead" class="plunger-dayhead"><h2 id="plungerDayTitle"></h2></div>
-    <main id="plungerStage" class="plunger-stage" aria-label="Golden Plunger winners by age division"></main>
-    <section id="plungerSplash" class="plunger-splash" aria-live="polite" hidden>
-      <svg class="plunger plunger-svg" viewBox="0 0 889 500" aria-hidden="true"><use href="#i-plunger"/></svg>
-      <div class="plunger-kicker">The Golden Plunger</div>
-      <h2>Awaiting today&rsquo;s <em>champions</em></h2>
-      <p id="plungerBlurb"></p>
-    </section>
-    <p id="plungerSr" class="sr-only" aria-live="polite"></p>
-  </section>
+  <section id="summarySlide" class="summary-slide" aria-label="Final placements, all divisions" hidden></section>
 
   <section class="card chartcard" aria-label="Week trend">
     <div class="cardhead">
@@ -569,8 +623,10 @@ document.documentElement.setAttribute('data-theme','smartos-dark');
     <path d="M474.8194,440.31h66.3106" fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"/>
     <path d="M414.23,357.39c10.23-2.55,17.3-1.93,28.15-1.93" fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"/>
   </symbol>
-  <symbol id="i-alert" viewBox="0 0 24 24">
-    <path d="M12 2 1 21h22L12 2Zm0 6c.7 0 1.2.6 1.1 1.3l-.4 5a.7.7 0 0 1-1.4 0l-.4-5A1.1 1.1 0 0 1 12 8Zm0 9.2a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z"/>
+  <symbol id="i-info" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="9.25" fill="none" stroke="currentColor" stroke-width="1.8"/>
+    <circle cx="12" cy="7.6" r="1.15" fill="currentColor"/>
+    <rect x="10.9" y="10.6" width="2.2" height="7.4" rx="1.1" fill="currentColor"/>
   </symbol>
 </svg>
 
@@ -583,18 +639,6 @@ var GROUP_CLS={Alpha:'g-alpha',Beta:'g-beta',Gamma:'g-gamma'};
 var DAY_FULL={Tue:'Tuesday',Wed:'Wednesday',Thu:'Thursday',Fri:'Friday'};
 var CAT_SHORT={floors:'Floors',beds:'Beds',belongings:'Stow',trash:'Trash'};
 
-var PLUNGER_GENERIC_BLURB='Every cabin already got the once-over today: inspectors done, clipboards full. '+
-  'Somewhere behind the scenes, scores are being tallied, and one very tidy bunk is about to claim a slightly damp trophy.';
-var PLUNGER_DAY_BLURB={
-  Tue:'Day one’s inspections are already done, whether your socks agree or not. '+
-    'Scores are being tallied now: the week’s first champions are moments away.',
-  Wed:'Wednesday’s rounds wrapped hours ago, and the competition is heating up. '+
-    'Somewhere, a calculator is smoking and a cabin is about to be crowned.',
-  Thu:'Thursday’s inspections are in the books. One day of glory left to grab, '+
-    'and the tallying is already underway backstage.',
-  Fri:'This is it: the final inspection of the whole week. Every cabin has been judged, '+
-    'and the season’s ultimate champions are about to be revealed.'
-};
 var PLUNGER_CITATIONS=[
   'Floors so clean you could eat breakfast off them (please don’t).',
   'A spotless victory, sealed with a single glorious plunge.',
@@ -607,7 +651,31 @@ var PLUNGER_CITATIONS=[
   'The dust bunnies have officially surrendered.',
   'Sweeping the competition, one swept floor at a time.',
   'So fresh, so clean, so deserving of this majestic plunger.',
-  'Where mess fears to tread. All hail the champions.'
+  'Where mess fears to tread. All hail the champions.',
+  'This cabin turned chores into an art form.',
+  'Somewhere, a mop is taking a well earned bow.',
+  'Every corner accounted for. Every sock in its place.',
+  'A masterclass in bunk management.',
+  'The floor practically sparkles with pride.',
+  'Trash cans everywhere are taking notes.',
+  'This bunk did not leave a single crumb to chance.',
+  'Proof that camp and cleanliness can coexist.',
+  'The inspectors ran out of compliments halfway through.',
+  'Bunks made so sharp you could bounce a quarter off them.',
+  'A cabin so tidy it belongs in a catalog.',
+  'This is what teamwork looks like, one swept floor at a time.',
+  'Somewhere a counselor is beaming with pride.',
+  'Not a single stray shoe in sight. Remarkable.',
+  'The kind of clean that makes parents ask questions.',
+  'This cabin treated cleanup time like an Olympic event.',
+  'Every surface gleams like it just met its reflection for the first time.',
+  'A five star performance in the fine art of tidying up.',
+  'This bunk earned its plunger the honest way: with elbow grease.',
+  'Somewhere, dust is filing a missing persons report.',
+  'The kind of cabin that makes the other bunks nervous.',
+  'This crew turned cleanup time into a personal mission.',
+  'A quietly excellent showing: no drama, just results.',
+  'The floors are so clean they practically squeak with satisfaction.'
 ];
 
 var config=null,currentDay=null,currentGroup=null,rank=null,week=null;
@@ -617,7 +685,9 @@ var fetching=false,refetchQueued=false,failCount=0,pollTimer=null;
 var presentMode=false,presentSummary=false;
 var presentUrlRequested=false,presentSplashDone=false;
 var emceeMode=false,emceeUrlRequested=false;
-var plungerMode=false,plungerShownCabin={};
+var plungerFlavor={};
+var plungerAnnounceGroup=null;
+var howMode=false,howSlide=1,howOpenerEl=null;
 var DOWN_KEYS=['ArrowDown','PageDown','Right'];
 var UP_KEYS=['ArrowUp','PageUp','Left'];
 
@@ -801,7 +871,7 @@ function countFor(day,group){return revealedCount[revealKey(day,group)]||0;}
 function setCountFor(day,group,n){revealedCount[revealKey(day,group)]=n;}
 function isRevealed(day,group){return countFor(day,group)>0;}
 function revealNext(day,group){
-  var max=groupRows(group).length;
+  var max=revealMaxFor(group);
   var n=countFor(day,group);
   if(n<max)setCountFor(day,group,n+1);
 }
@@ -810,79 +880,87 @@ function revealPrev(day,group){
   if(n>0)setCountFor(day,group,n-1);
 }
 function revealAllOf(day,group){
-  setCountFor(day,group,groupRows(group).length);
+  setCountFor(day,group,revealMaxFor(group));
+}
+// Optional per-division "top N only" cap for Presentation Mode's reveal
+// ceremony, hero board grid, and final summary slide - cabins ranked
+// below the cap are never revealed/listed on the projector. The normal
+// (non-presenting) dashboard, the Emcee Dashboard, and the underlying
+// Sheet/Entry data are unaffected and always show everyone. Omit a
+// division, or set it to 0, to reveal everyone in Presentation Mode too.
+var REVEAL_CAPS={Alpha:3};
+function revealCapFor(group){return presentMode?(REVEAL_CAPS[group]||0):0;}
+function revealMaxFor(group){
+  var cap=revealCapFor(group),all=groupRows(group).length;
+  return cap?Math.min(all,cap):all;
 }
 
 function pick(a){return a[Math.floor(Math.random()*a.length)];}
-function plungerReveal(node){
-  node.classList.remove('reveal');
-  void node.offsetWidth;
-  node.classList.add('reveal');
+var CLEAN_ADJ=[
+  {min:10,sparkleMin:8,words:['legendary','flawless','perfection','immaculate']},
+  {min:10,sparkleMin:0,words:['flawless','immaculate','pristine','spotless']},
+  {min:9,sparkleMin:0,words:['sparkling','gleaming','spotless','shining']},
+  {min:7,sparkleMin:0,words:['clean','tidy','neat','squared-away']},
+  {min:0,sparkleMin:0,words:['respectable','solid','orderly','presentable']}
+];
+function plungerFlavorFor(g,w){
+  var cached=plungerFlavor[g];
+  if(cached&&cached.cabin===w.cabin)return cached;
+  var tier=CLEAN_ADJ.filter(function(t){return w.cleanliness>=t.min&&w.sparkle>=t.sparkleMin;})[0]||CLEAN_ADJ[CLEAN_ADJ.length-1];
+  var fresh={cabin:w.cabin,adj:pick(tier.words),citation:pick(PLUNGER_CITATIONS)};
+  plungerFlavor[g]=fresh;
+  return fresh;
 }
-function plungerBadgeHtml(){
-  return '<div class="pl-badge"><svg aria-hidden="true"><use href="#i-alert"/></svg>Photo finish &middot; recount pending</div>';
-}
-function plungerSvgHtml(dim){
-  return '<svg class="plunger plunger-svg'+(dim?' dim':'')+'" viewBox="0 0 889 500" aria-hidden="true"><use href="#i-plunger"/></svg>';
-}
-function plungerCardInner(g,w){
-  var head='<div class="pl-head"><span class="pl-gname">'+esc(g)+'</span>'+
-    '<span class="pl-tag">Golden Plunger</span></div>';
-  if(!w){
-    return head+'<div class="pl-body empty">'+plungerSvgHtml(true)+
-      '<div class="pl-empty-title">No entries yet today</div>'+
-      '<div class="pl-empty-sub">The inspectors haven’t reached the '+esc(g)+' cabins. Check back soon!</div></div>';
+var PA_KICKERS=[
+  'THE PLUNGER HAS CHOSEN','SILENCE FOR THE GOLDEN PLUNGER','ONE PLUNGE TO RULE THEM ALL',
+  'DESTINY SMELLS LEMON FRESH','THE SUDS HAVE SPOKEN','ALL RISE FOR CABIN ROYALTY',
+  'SOMEBODY MOPPED FOR THIS MOMENT','GLORY COMES TO THOSE WHO SCRUB','THE MOPS FALL SILENT',
+  'THE THRONE AWAITS ITS CHAMPION'
+];
+var PA_SFX=['THUNK','PLONK','SHLOONK','KA-THUNK'];
+function paConfettiHtml(seedGroup){
+  var colors=['var(--g)','var(--medal-gold)','var(--accent-yellow)'];
+  var pieces='';
+  for(var i=0;i<24;i++){
+    var left=((i*37+13)%100),delay=(((i*53)%40)/100).toFixed(2),
+      dur=(1.1+((i*29)%60)/100).toFixed(2),color=colors[i%colors.length],
+      rot=(i*47)%360;
+    pieces+='<i style="left:'+left+'%;animation-delay:'+delay+'s;animation-duration:'+dur+'s;background:'+color+';transform:rotate('+rot+'deg)"></i>';
   }
-  var prov=w.winnerProvisional?plungerBadgeHtml():'';
-  return head+'<div class="pl-body">'+prov+plungerSvgHtml(false)+
-    '<div class="pl-cabin">'+esc(w.cabin)+'</div>'+
-    '<div class="pl-score"><b>'+esc(w.cleanliness)+'</b><span>/10 clean</span></div>'+
-    '<p class="pl-citation">'+esc(pick(PLUNGER_CITATIONS))+'</p></div>';
+  return pieces;
 }
-function renderPlunger(){
-  var stage=el('plungerStage');
-  var splash=el('plungerSplash');
-  var dayhead=el('plungerDayhead');
-  var groups=(config&&config.ageGroups)||[];
-  var winners=(rank&&rank.winners)||{};
-  var hasAny=!!rank&&groups.some(function(g){return winners[g];});
-  if(!hasAny){
-    stage.hidden=true;dayhead.hidden=true;splash.hidden=false;
-    stage.innerHTML='';
-    plungerShownCabin={};
-    el('plungerBlurb').textContent=PLUNGER_DAY_BLURB[currentDay]||PLUNGER_GENERIC_BLURB;
-    return;
-  }
-  splash.hidden=true;dayhead.hidden=false;stage.hidden=false;
-  el('plungerDayTitle').innerHTML=esc(fullDay(currentDay))+'&rsquo;s <em>champions</em>';
-  stage.innerHTML=groups.map(function(g){
-    var w=winners[g]||null;
-    var cls='pl-award '+grp(g)+((w&&w.winnerProvisional)?' prov':'');
-    return '<article class="'+cls+'" id="plaward-'+esc(g)+'" aria-label="'+esc(g)+' division Golden Plunger">'+
-      plungerCardInner(g,w)+'</article>';
-  }).join('');
-  var changed=[],srParts=[];
-  groups.forEach(function(g){
-    var w=winners[g]||null;
-    var nc=w?w.cabin:null;
-    if(nc!==plungerShownCabin[g]&&nc)changed.push(g);
-    plungerShownCabin[g]=nc;
-    srParts.push(w?(g+': cabin '+w.cabin+', '+w.cleanliness+' out of 10'+
-      (w.winnerProvisional?', pending a tiebreak':'')):(g+': no entries yet'));
-  });
-  el('plungerSr').textContent=fullDay(currentDay)+' Golden Plunger winners. '+srParts.join('. ')+'.';
-  changed.forEach(function(g){var n=el('plaward-'+g);if(n)plungerReveal(n);});
+function showPlungerAnnounce(group){
+  var box=el('plungerAnnounce');
+  box.hidden=true;
+  var w=groupRows(group)[0];
+  var flavor=plungerFlavorFor(group,w);
+  box.className='plunger-announce '+grp(group);
+  box.innerHTML=
+    '<div class="pa-flash"></div>'+
+    '<div class="pa-confetti">'+paConfettiHtml(group)+'</div>'+
+    '<div class="pa-gname">'+esc(group)+'</div>'+
+    '<div class="pa-kicker">'+esc(pick(PA_KICKERS))+'</div>'+
+    '<div class="pa-dropzone"><svg class="pa-plunger" viewBox="0 0 889 500" aria-hidden="true"><use href="#i-plunger"/></svg>'+
+    '<div class="pa-onomatopoeia">'+esc(pick(PA_SFX))+'</div></div>'+
+    '<div class="pa-cabin">'+esc(w.cabin)+'</div>'+
+    '<div class="pa-score"><b>'+esc(w.cleanliness)+'</b><span>/10 '+esc(flavor.adj)+'</span></div>'+
+    '<p class="pa-citation">'+esc(flavor.citation)+'</p>';
+  plungerAnnounceGroup=group;
+  box.hidden=false;
+  el('paSr').textContent=group+"’s Golden Plunger winner: "+w.cabin+', '+w.cleanliness+' out of 10.';
 }
-
+function hidePlungerAnnounce(){
+  if(!plungerAnnounceGroup)return;
+  plungerAnnounceGroup=null;
+  var box=el('plungerAnnounce');
+  box.hidden=true;
+  box.innerHTML='';
+}
 function renderPerDay(){
   var content=el('perDayContent');
   var gate=el('revealGate');
   var summary=el('summarySlide');
   var emceeView=el('emceeView');
-  if(plungerMode){
-    renderPlunger();
-    return;
-  }
   if(emceeMode){
     content.hidden=true;
     gate.hidden=true;
@@ -924,7 +1002,7 @@ function renderPerDay(){
 function renderRevealHint(){
   var hint=el('revealHint');
   var revCount=countFor(currentDay,currentGroup);
-  var max=groupRows(currentGroup).length;
+  var max=revealMaxFor(currentGroup);
   if(!max||revCount>=max){hint.hidden=true;return;}
   hint.hidden=false;
   hint.innerHTML='Revealed '+revCount+' of '+max+' &middot; press <kbd>&darr;</kbd> for the next cabin, <kbd>&uarr;</kbd> to go back';
@@ -1055,7 +1133,7 @@ var HERO_ICONS={
   trash:'<svg viewBox="0 0 256 256" fill="currentColor"><path d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z"/></svg>',
   bath:'<svg viewBox="0 0 256 256" fill="currentColor"><path d="M240,96H208a8,8,0,0,0-8-8H136a8,8,0,0,0-8,8H64V52A12,12,0,0,1,76,40a12.44,12.44,0,0,1,12.16,9.59,8,8,0,0,0,15.68-3.18A28.32,28.32,0,0,0,76,24,28,28,0,0,0,48,52V96H16a8,8,0,0,0-8,8v40a56.06,56.06,0,0,0,56,56v16a8,8,0,0,0,16,0V200h96v16a8,8,0,0,0,16,0V200a56.06,56.06,0,0,0,56-56V104A8,8,0,0,0,240,96Zm-48,8v32H144V104Zm40,40a40,40,0,0,1-40,40H64a40,40,0,0,1-40-40V112H128v32a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V112h24Z"/></svg>'
 };
-var HERO_LABELS={beds:'Beds',belongings:'Stuff',trash:'Trash',bath:'Bathroom'};
+var HERO_LABELS={beds:'Beds',belongings:'Stuff',trash:'Trash',bath:'Bath'};
 function heroCatLabel(key){return HERO_LABELS[key]||catLabel(key);}
 function heroMedalHtml(rk){
   var color=rk===1?'var(--medal-gold)':(rk===2?'var(--medal-silver)':'var(--medal-bronze)');
@@ -1081,26 +1159,32 @@ function heroCardHtml(r){
     '<div class="cells">'+cells+'</div>'+
     '<div class="hc-bottom">'+sparkle+'<div class="hc-score">'+r.cleanliness+'/10</div></div></article>';
 }
-function boardArticleHeroHtml(gName,rows,scoredN,totalN,awaiting){
+function boardArticleHeroHtml(gName,rows,scoredN,totalN,awaiting,gridCap,capNote){
   var head='<div class="bhead"><span class="gname">'+esc(gName)+'</span>'+
     '<span class="bcount">'+scoredN+'/'+totalN+' scored</span></div>';
   if(!rows.length){
     var empty='<div class="boardempty">No inspections yet for '+esc(gName)+'.</div>';
     if(awaiting.length)empty+='<div class="awaiting">Awaiting: '+awaiting.map(esc).join(', ')+'</div>';
+    if(capNote)empty+='<div class="awaiting">'+esc(capNote)+'</div>';
     return '<article class="board '+grp(gName)+'">'+head+empty+'</article>';
   }
-  var slots=Math.ceil(totalN/3)*3;
+  var slotTotal=gridCap||totalN;
+  var cols=slotTotal>6?4:3;
+  var slots=Math.ceil(slotTotal/cols)*cols;
   var cards=rows.map(heroCardHtml).join('');
   for(var i=rows.length;i<slots;i++){
     cards+='<article class="herocard empty"></article>';
   }
-  var rowCount=slots/3;
-  var inner='<div class="herogrid" data-cols="3" style="grid-template-rows:repeat('+rowCount+',1fr)">'+cards+'</div>';
+  var rowCount=slots/cols;
+  var inner='<div class="herogrid" data-cols="'+cols+'" style="grid-template-columns:repeat('+cols+',1fr);grid-template-rows:repeat('+rowCount+',1fr)">'+cards+'</div>';
   if(rows.some(isUnresolved)){
     inner+='<div class="tbnote">~ tied: order is provisional until the inspector breaks the tie</div>';
   }
   if(awaiting.length){
     inner+='<div class="awaiting">Awaiting: '+awaiting.map(esc).join(', ')+'</div>';
+  }
+  if(capNote){
+    inner+='<div class="awaiting">'+esc(capNote)+'</div>';
   }
   return '<article class="board '+grp(gName)+'">'+head+inner+'</article>';
 }
@@ -1155,21 +1239,24 @@ function boardTableHtml(rows,awaiting,gName){
   }
   return inner;
 }
-function boardArticleHtml(gName,rows,scoredN,totalN,awaiting){
+function boardArticleHtml(gName,rows,scoredN,totalN,awaiting,capNote){
+  var note=capNote?'<div class="awaiting">'+esc(capNote)+'</div>':'';
   return '<article class="board '+grp(gName)+'">'+
     '<div class="bhead"><span class="gname">'+esc(gName)+'</span>'+
     '<span class="bcount">'+scoredN+'/'+totalN+' scored</span></div>'+
-    boardTableHtml(rows,awaiting,gName)+'</article>';
+    boardTableHtml(rows,awaiting,gName)+note+'</article>';
 }
 function renderBoards(){
   var scored={};
   groupRows(currentGroup).forEach(function(r){scored[r.cabin]=true;});
   var revCount=countFor(currentDay,currentGroup);
   var html=[currentGroup].map(function(gName){
-    var allRows=groupRows(gName),rows=allRows.slice(0,revCount);
+    var allRows=groupRows(gName),rows=allRows.slice(0,Math.min(revCount,revealMaxFor(gName)));
     var groupCabins=config.cabins.filter(function(c){return c.ageGroup===gName;});
     var awaiting=groupCabins.filter(function(c){return !scored[c.code];}).map(function(c){return c.code;});
-    return boardArticleHeroHtml(gName,rows,allRows.length,groupCabins.length,awaiting);
+    var cap=revealCapFor(gName),gridCap=cap?Math.min(groupCabins.length,cap):null;
+    var capNote=cap?('Only the top '+Math.min(groupCabins.length,cap)+' of '+groupCabins.length+' are announced'):null;
+    return boardArticleHeroHtml(gName,rows,allRows.length,groupCabins.length,awaiting,gridCap,capNote);
   }).join('');
   el('boards').innerHTML=html;
 }
@@ -1197,11 +1284,13 @@ function sizeHeroIcons(){
 function renderSummarySlide(){
   var html=config.ageGroups.map(function(gName){
     var allRows=groupRows(gName);
+    var cap=revealCapFor(gName),rows=cap?allRows.slice(0,cap):allRows;
     var groupCabins=config.cabins.filter(function(c){return c.ageGroup===gName;});
     var scoredCodes={};
     allRows.forEach(function(r){scoredCodes[r.cabin]=true;});
     var awaiting=groupCabins.filter(function(c){return !scoredCodes[c.code];}).map(function(c){return c.code;});
-    return boardArticleHtml(gName,allRows,allRows.length,groupCabins.length,awaiting);
+    var capNote=cap?('Only the top '+rows.length+' of '+allRows.length+' are shown'):null;
+    return boardArticleHtml(gName,rows,allRows.length,groupCabins.length,awaiting,capNote);
   }).join('');
   el('summarySlide').innerHTML=html;
 }
@@ -1357,31 +1446,10 @@ el('revealAllBtn').addEventListener('click',function(){
   if(week)renderTrend();
 });
 
-function enterPlunger(){
-  if(plungerMode)return;
-  if(emceeMode)exitEmceeMode();
-  if(presentMode)exitPresent();
-  plungerMode=true;
-  plungerShownCabin={};
-  document.body.classList.add('plunger');
-  if(document.fullscreenEnabled){
-    document.documentElement.requestFullscreen().catch(function(){});
-  }
-  renderPerDay();
-}
-function exitPlunger(){
-  if(!plungerMode)return;
-  plungerMode=false;
-  document.body.classList.remove('plunger');
-  if(document.fullscreenElement){
-    document.exitFullscreen().catch(function(){});
-  }
-  renderPerDay();
-}
 function enterPresent(){
   if(presentMode)return;
   if(emceeMode)exitEmceeMode();
-  if(plungerMode)exitPlunger();
+  if(howMode)closeHow();
   presentMode=true;
   document.body.classList.add('presenting');
   if(document.fullscreenEnabled){
@@ -1393,6 +1461,7 @@ function exitPresent(){
   if(!presentMode)return;
   presentMode=false;
   presentSummary=false;
+  hidePlungerAnnounce();
   document.body.classList.remove('presenting');
   if(document.fullscreenElement){
     document.exitFullscreen().catch(function(){});
@@ -1402,7 +1471,7 @@ function exitPresent(){
 function enterEmceeMode(){
   if(emceeMode)return;
   if(presentMode)exitPresent();
-  if(plungerMode)exitPlunger();
+  if(howMode)closeHow();
   emceeMode=true;
   document.body.classList.add('emcee');
   renderPerDay();
@@ -1412,6 +1481,57 @@ function exitEmceeMode(){
   emceeMode=false;
   document.body.classList.remove('emcee');
   renderPerDay();
+}
+function renderHowContent(){
+  var box=el('howIcons');
+  if(box){
+    box.innerHTML=HERO_CATS.map(function(key){
+      return '<div class="how-cat"><div class="cell">'+HERO_ICONS[key]+'</div>'+
+        '<span>'+esc(heroCatLabel(key))+'</span></div>';
+    }).join('');
+  }
+  var lbl=sparkLabel(),def=sparkDef();
+  el('howSlide2').innerHTML=
+    '<h2 id="howTitle2">'+esc(lbl)+' Points &amp; Winning the Day</h2>'+
+    '<div class="how-sparkle"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l1.8 5.6L19 9l-5.2 1.4L12 16l-1.8-5.6L5 9l5.2-1.4z"/></svg></div>'+
+    '<p>'+esc(lbl)+' is a bonus score that starts at '+def+'. If your cabin really shines, it can go up. If it&rsquo;s a rough day, it can go down a little.</p>'+
+    '<p>'+esc(lbl)+' almost never matters on its own. It&rsquo;s only there to break ties!</p>'+
+    '<p>Each day, the cabin with the highest Cleanliness score wins for its age group. Exactly tied on Cleanliness? '+esc(lbl)+' breaks it. Still tied? The inspector decides by hand.</p>';
+}
+function goHowSlide(n){
+  howSlide=n;
+  el('howSlide1').hidden=(n!==1);
+  el('howSlide2').hidden=(n!==2);
+  el('howBackBtn').hidden=(n===1);
+  el('howNextBtn').textContent=(n===2?'Got it!':'Next');
+  Array.prototype.forEach.call(el('howBack').querySelectorAll('.howdot'),function(d){
+    d.setAttribute('aria-current',Number(d.getAttribute('data-i'))===n?'true':'false');
+  });
+  el('howCard').setAttribute('aria-labelledby',n===2?'howTitle2':'howTitle1');
+}
+function openHow(){
+  if(howMode)return;
+  if(emceeMode)exitEmceeMode();
+  if(presentMode)exitPresent();
+  howMode=true;
+  howOpenerEl=document.activeElement;
+  goHowSlide(1);
+  el('howBack').hidden=false;
+  document.body.classList.add('how');
+  if(document.fullscreenEnabled){
+    document.documentElement.requestFullscreen().catch(function(){});
+  }
+  el('howCloseBtn').focus();
+}
+function closeHow(){
+  if(!howMode)return;
+  howMode=false;
+  el('howBack').hidden=true;
+  document.body.classList.remove('how');
+  if(document.fullscreenElement){
+    document.exitFullscreen().catch(function(){});
+  }
+  if(howOpenerEl&&typeof howOpenerEl.focus==='function')howOpenerEl.focus();
 }
 function maybeEnterEmceeFromUrl(){
   if(!emceeUrlRequested||emceeMode||!config||!rank)return;
@@ -1440,21 +1560,41 @@ el('startPresentBtn').addEventListener('click',function(){enterPresent();});
 el('exitPresentBtn').addEventListener('click',function(){exitPresent();});
 el('emceeBtn').addEventListener('click',function(){enterEmceeMode();});
 el('exitEmceeBtn').addEventListener('click',function(){exitEmceeMode();});
-el('plungerBtn').addEventListener('click',function(){enterPlunger();});
-el('exitPlungerBtn').addEventListener('click',function(){exitPlunger();});
+el('howBtn').addEventListener('click',openHow);
+el('howCloseBtn').addEventListener('click',closeHow);
+el('howBack').addEventListener('click',function(e){if(e.target===el('howBack'))closeHow();});
+el('howNextBtn').addEventListener('click',function(){if(howSlide===1)goHowSlide(2);else closeHow();});
+el('howBackBtn').addEventListener('click',function(){goHowSlide(1);});
+Array.prototype.forEach.call(document.querySelectorAll('.howdot'),function(d){
+  d.addEventListener('click',function(){goHowSlide(Number(d.getAttribute('data-i')));});
+});
 el('presentSplash').addEventListener('click',dismissPresentSplash);
 document.addEventListener('fullscreenchange',function(){
   if(presentMode&&!document.fullscreenElement)exitPresent();
-  if(plungerMode&&!document.fullscreenElement)exitPlunger();
+  if(howMode&&!document.fullscreenElement)closeHow();
 });
 document.addEventListener('keydown',function(e){
+  var howBack=el('howBack');
+  if(howBack&&!howBack.hidden){
+    if(e.key==='Escape')closeHow();
+    return;
+  }
   var splash=el('presentSplash');
   if(splash&&!splash.hidden){dismissPresentSplash();return;}
   var tag=(e.target&&e.target.tagName)||'';
   if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return;
 
-  if(plungerMode){
-    if(e.key==='Escape')exitPlunger();
+  if(plungerAnnounceGroup){
+    if(e.key==='Escape'||DOWN_KEYS.indexOf(e.key)>=0){
+      e.preventDefault();
+      var announcedGroup=plungerAnnounceGroup;
+      hidePlungerAnnounce();
+      revealNext(currentDay,announcedGroup);
+      renderPerDay();
+      if(week)renderTrend();
+    }else if(UP_KEYS.indexOf(e.key)>=0){
+      e.preventDefault();
+    }
     return;
   }
 
@@ -1489,9 +1629,14 @@ document.addEventListener('keydown',function(e){
   }
 
   if(isDown){
-    if(countFor(currentDay,currentGroup)<groupRows(currentGroup).length){
-      revealNext(currentDay,currentGroup);
-      renderPerDay();
+    var revCnt=countFor(currentDay,currentGroup),revMax=revealMaxFor(currentGroup);
+    if(revCnt<revMax){
+      if(revCnt===0){
+        showPlungerAnnounce(currentGroup);
+      }else{
+        revealNext(currentDay,currentGroup);
+        renderPerDay();
+      }
     }else{
       var gi=config.ageGroups.indexOf(currentGroup);
       if(gi<config.ageGroups.length-1){selectGroup(config.ageGroups[gi+1]);}
@@ -1516,6 +1661,7 @@ function onConfig(cfg){
   buildGroupTabs();
   el('legend1').innerHTML=legendHtml();
   el('legend2').innerHTML=legendHtml();
+  renderHowContent();
   currentDay=defaultDay();
   currentGroup=config.ageGroups[0];
   markDayTabs();

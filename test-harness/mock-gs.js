@@ -362,27 +362,6 @@
     return {ok: true};
   }
 
-  function getGoldenPlungerData() {
-    var allRows = readRows_();
-    var latestDay = null;
-    for (var i = DAYS.length - 1; i >= 0; i--) {
-      var hasData = allRows.some(function (r) { return r.day === DAYS[i]; });
-      if (hasData) {
-        latestDay = DAYS[i];
-        break;
-      }
-    }
-    if (!latestDay) {
-      return {day: null, winners: {}, unresolvedTies: []};
-    }
-    var rankings = getRankings(latestDay);
-    return {
-      day: latestDay,
-      winners: rankings.winners,
-      unresolvedTies: rankings.unresolvedTies
-    };
-  }
-
   function getWeekSummary() {
     var allRows = readRows_();
     var byAgeGroup = {};
@@ -405,8 +384,7 @@
     getScores: getScores,
     getRankings: getRankings,
     setTieOrder: setTieOrder,
-    getWeekSummary: getWeekSummary,
-    getGoldenPlungerData: getGoldenPlungerData
+    getWeekSummary: getWeekSummary
   };
 
   function resultCopy_(value) {
