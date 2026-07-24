@@ -170,7 +170,8 @@ h1.slide-title{font-size:clamp(2.6rem,6vw,5.6rem);font-weight:800;line-height:1.
 .livetag{display:inline-flex;align-items:center;gap:.6rem;color:var(--text-secondary);font-size:clamp(.95rem,1.4vw,1.25rem);font-weight:600;}
 .livetag .dot{width:.7em;height:.7em;border-radius:50%;background:var(--team-green);box-shadow:0 0 10px var(--team-green);animation:livePulse 2s ease-in-out infinite;}
 @keyframes livePulse{0%,100%{opacity:.4;}50%{opacity:1;}}
-#slide4 .stand{display:flex;flex-direction:column;gap:clamp(.55rem,1.3vh,1rem);flex:1;justify-content:center;}
+#slide4 .stand{display:flex;flex-direction:column;gap:clamp(.9rem,1.9vh,1.5rem);flex:1;justify-content:center;
+  max-width:1160px;width:100%;margin-inline:auto;}
 #slide4 .srow{display:grid;grid-template-columns:auto auto 1fr auto;align-items:center;gap:clamp(1rem,2vw,1.8rem);
   background:var(--bg-card);border:1px solid var(--border-subtle);border-left:8px solid var(--tc,var(--border));
   border-radius:var(--radius);padding:clamp(.65rem,1.4vh,1.1rem) clamp(1.4rem,2.6vw,2.2rem);
@@ -182,12 +183,12 @@ h1.slide-title{font-size:clamp(2.6rem,6vw,5.6rem);font-weight:800;line-height:1.
 #slide4 .spos{font-weight:800;font-size:clamp(2rem,3.6vw,3.2rem);color:var(--text-secondary);
   font-variant-numeric:tabular-nums;line-height:1;width:1.4em;text-align:center;}
 #slide4 .srow.p1 .spos{color:var(--medal-gold);}
-#slide4 .sflag{width:clamp(48px,4.2vw,72px);}
+#slide4 .sflag{width:clamp(44px,3.4vw,60px);}
 #slide4 .sflag .cloth-g{animation:flagSnap 2.8s cubic-bezier(.16,.9,.3,1.4) infinite, flagGlow 2.8s ease-out infinite;}
 #slide4 .sflag .flag-outline{stroke-width:3;}
 #slide4 .sinfo{min-width:0;}
 #slide4 .sname{font-weight:800;font-size:clamp(2rem,3.4vw,3rem);text-transform:uppercase;color:var(--tc,#fff);line-height:1;letter-spacing:.01em;}
-#slide4 .smeta{color:var(--text-secondary);font-size:clamp(1rem,1.5vw,1.3rem);margin-top:.2rem;}
+#slide4 .smeta{color:var(--text-secondary);font-size:clamp(1.2rem,1.6vw,1.5rem);margin-top:.25rem;}
 #slide4 .spts{font-weight:800;font-size:clamp(2.2rem,3.9vw,3.3rem);color:#fff;font-variant-numeric:tabular-nums;text-align:right;line-height:1;}
 #slide4 .spts .u{font-size:.42em;color:var(--text-secondary);font-weight:700;letter-spacing:.08em;margin-left:.3em;text-transform:uppercase;}
 
@@ -197,31 +198,31 @@ h1.slide-title{font-size:clamp(2.6rem,6vw,5.6rem);font-weight:800;line-height:1.
 #slide5 #swingBody:not([hidden]){display:flex;flex-direction:column;justify-content:center;flex:1;min-height:0;}
 #slide5 .headline{background:linear-gradient(160deg,rgba(0,200,230,.10),rgba(0,200,230,.02));
   border:1px solid var(--cyan-dim);border-radius:var(--radius);padding:clamp(.9rem,1.9vh,1.35rem) clamp(1.3rem,2.4vw,2rem);
-  font-size:clamp(1.3rem,2.1vw,1.85rem);line-height:1.35;font-weight:500;}
+  font-size:clamp(1.5rem,2.3vw,2.05rem);line-height:1.35;font-weight:500;}
 #slide5 .headline b{color:var(--cyan);font-weight:800;}
-#slide5 .rangewrap{display:flex;flex-direction:column;gap:clamp(.8rem,2vh,1.5rem);}
-#slide5 .rrow{display:grid;grid-template-columns:clamp(11rem,15vw,15rem) 1fr;gap:clamp(1rem,2vw,1.8rem);align-items:center;}
-#slide5 .rlabel{display:flex;flex-direction:column;gap:.4rem;}
-#slide5 .rn{font-weight:800;text-transform:uppercase;font-size:clamp(1.5rem,2.5vw,2.2rem);color:var(--tc,#fff);line-height:1;}
-#slide5 .badge{display:inline-block;font-weight:700;font-size:clamp(.85rem,1.25vw,1.05rem);letter-spacing:.05em;
-  text-transform:uppercase;padding:.3em .8em;border-radius:999px;width:max-content;}
+#slide5 .rangewrap{display:flex;flex-direction:column;gap:clamp(1.3rem,3vh,2.3rem);}
+#slide5 .rrow{display:grid;grid-template-columns:clamp(12rem,16vw,16rem) 1fr;gap:clamp(1rem,2vw,1.8rem);align-items:center;}
+#slide5 .rlabel{display:flex;flex-direction:column;gap:.5rem;}
+#slide5 .rn{font-weight:800;text-transform:uppercase;font-size:clamp(1.7rem,2.7vw,2.45rem);color:var(--tc,#fff);line-height:1;}
+#slide5 .badge{display:inline-block;font-weight:700;font-size:clamp(1.15rem,1.5vw,1.45rem);letter-spacing:.04em;
+  text-transform:uppercase;padding:.32em .85em;border-radius:999px;width:max-content;}
 #slide5 .badge.win{color:#05070c;background:var(--tc,var(--cyan));}
 #slide5 .badge.climb{color:var(--cyan);background:rgba(0,200,230,.12);border:1px solid var(--cyan-dim);}
 #slide5 .rtrack{position:relative;height:clamp(2.6rem,4.4vh,3.4rem);}
 #slide5 .rseg{position:absolute;top:15%;height:70%;border-radius:999px;background:var(--tc,var(--cyan));opacity:.34;border:1.5px solid var(--tc,var(--cyan));}
 #slide5 .rdot{position:absolute;top:-6%;height:112%;width:5px;border-radius:3px;background:#fff;box-shadow:0 0 12px rgba(255,255,255,.7);}
-#slide5 .rdot .cur{position:absolute;top:-1.5em;left:50%;transform:translateX(-50%);font-size:clamp(.95rem,1.4vw,1.2rem);font-weight:700;color:#fff;white-space:nowrap;}
-#slide5 .rend{position:absolute;top:100%;margin-top:.2em;font-size:clamp(.9rem,1.35vw,1.15rem);color:var(--text-secondary);font-variant-numeric:tabular-nums;white-space:nowrap;}
+#slide5 .rdot .cur{position:absolute;top:-1.5em;left:50%;transform:translateX(-50%);font-size:clamp(1.2rem,1.6vw,1.6rem);font-weight:700;color:#fff;white-space:nowrap;}
+#slide5 .rend{position:absolute;top:100%;margin-top:.35em;font-size:clamp(1.1rem,1.45vw,1.4rem);color:var(--text-secondary);font-variant-numeric:tabular-nums;white-space:nowrap;}
 #slide5 .rmin{transform:translateX(0);}
 #slide5 .rmax{transform:translateX(-100%);}
 #slide5 .leaderline{position:absolute;top:-14%;height:128%;width:0;border-left:2.5px dashed var(--medal-gold);opacity:.7;}
-#slide5 .legend{display:flex;flex-wrap:wrap;gap:.8rem clamp(1.4rem,2.4vw,2.2rem);font-size:clamp(.95rem,1.4vw,1.2rem);color:var(--text-secondary);}
+#slide5 .legend{display:flex;flex-wrap:wrap;gap:.8rem clamp(1.4rem,2.4vw,2.2rem);font-size:clamp(1.15rem,1.5vw,1.45rem);color:var(--text-secondary);}
 #slide5 .legend .k{display:inline-flex;align-items:center;gap:.5rem;}
 #slide5 .legend .sw{width:1.6rem;height:.8rem;border-radius:3px;display:inline-block;}
 #slide5 .legend .sw.range{background:var(--cyan);opacity:.34;border:1px solid var(--cyan);}
 #slide5 .legend .sw.now{width:5px;height:1.1rem;background:#fff;border-radius:3px;}
 #slide5 .legend .sw.lead{width:0;height:1.1rem;border-left:2.5px dashed var(--medal-gold);}
-#slide5 .note{color:var(--text-secondary);font-size:clamp(1rem,1.5vw,1.3rem);line-height:1.35;}
+#slide5 .note{color:var(--text-secondary);font-size:clamp(1.2rem,1.7vw,1.6rem);line-height:1.35;}
 
 /* ===== shared data-slide status (loading / error) ===== */
 .dstatus{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;text-align:center;}
@@ -258,10 +259,11 @@ h1.slide-title{font-size:clamp(2.6rem,6vw,5.6rem);font-weight:800;line-height:1.
   #slide1 .cr-title{font-size:2.6rem}
   #slide1 .cr-sub{font-size:1.1rem}
   #slide1 .cr-flags .mini-flag{width:clamp(40px,12vw,58px)}
-  #slide3 .ladder{grid-template-columns:1fr;gap:.4rem}
-  #slide3 .lcol:nth-child(2){margin-top:.4rem}
+  #slide3 .s3-body{grid-template-columns:1fr;gap:.7rem}
+  #slide3 .ladder{gap:.35rem}
   #slide3 .lrank,#slide3 .lval{font-size:1.15rem}
-  #slide3 .s3-foot{flex-direction:column}
+  #slide3 .s3-side{gap:.5rem}
+  #slide3 .stat{flex:none}
   #slide4 .srow{grid-template-columns:auto 1fr auto;gap:.8rem}
   #slide4 .sflag{display:none}
   #slide4 .sname{font-size:1.4rem}
@@ -561,9 +563,9 @@ h1.slide-title{font-size:clamp(2.6rem,6vw,5.6rem);font-weight:800;line-height:1.
       <h1 class="slide-title">Every place is in play</h1>
     </div>
     <div id="swingBody" hidden>
-      <div class="headline" id="headline" style="margin-bottom:clamp(1rem,2.4vh,1.8rem)"></div>
+      <div class="headline" id="headline" style="margin-bottom:clamp(1.8rem,3.6vh,2.8rem)"></div>
       <div class="rangewrap" id="rangewrap"></div>
-      <div class="legend" style="margin-top:clamp(1rem,2vh,1.5rem)">
+      <div class="legend" style="margin-top:clamp(1.6rem,3.2vh,2.4rem)">
         <span class="k"><span class="sw range"></span> Possible finish (worst case to best case)</span>
         <span class="k"><span class="sw now"></span> Score right now</span>
         <span class="k"><span class="sw lead"></span> Current leader's worst case</span>
@@ -636,17 +638,16 @@ h1.slide-title{font-size:clamp(2.6rem,6vw,5.6rem);font-weight:800;line-height:1.
 
   /* ==== point ladder (slide 3) ==== */
   (function ladder(){
-    var L=document.getElementById('ladderL'),R=document.getElementById('ladderR'),max=SLOTS[0];
+    var L=document.getElementById('ladderL'),max=SLOTS[0];
     function row(i){
       var place=i+1,sup={1:'st',2:'nd',3:'rd'}[place]||'th',pct=Math.round(SLOTS[i]/max*100);
       return '<div class="lrow"><div class="lrank">'+place+'<span class="sup">'+sup+'</span></div>'
         +'<div class="lbar-track"><div class="lbar" style="width:'+pct+'%"></div></div>'
         +'<div class="lval">'+SLOTS[i].toLocaleString()+'</div></div>';
     }
-    var l='',r='';
-    for(var i=0;i<6;i++) l+=row(i);
-    for(var j=6;j<12;j++) r+=row(j);
-    L.innerHTML=l; R.innerHTML=r;
+    var l='';
+    for(var i=0;i<12;i++) l+=row(i);
+    L.innerHTML=l;
   })();
 
   /* ==== CSV parse (by-name Team / TOTAL / Character Race) ==== */
@@ -764,8 +765,11 @@ h1.slide-title{font-size:clamp(2.6rem,6vw,5.6rem);font-weight:800;line-height:1.
     var leaderFloor=byTotal[0].base+BOTTOM3;
     var floors=teams.map(function(t){return t.base+BOTTOM3;});
     var ceils=teams.map(function(t){return t.base+TOP3;});
-    var rawMin=Math.min.apply(null,floors),rawMax=Math.max.apply(null,ceils),rawSpan=rawMax-rawMin;
-    var dMin=rawMin-rawSpan*0.05, dMax=rawMax+rawSpan*0.05, span=dMax-dMin;
+    var curs=teams.map(function(t){return t.total;});
+    /* scale must include current scores: a team's "now" marker sits up to BOTTOM3 below its
+       floor, so anchoring only to floors pushes the lowest team's dot off the left edge. */
+    var rawMin=Math.min.apply(null,floors.concat(curs)),rawMax=Math.max.apply(null,ceils),rawSpan=rawMax-rawMin;
+    var dMin=rawMin-rawSpan*0.09, dMax=rawMax+rawSpan*0.07, span=dMax-dMin;
     function pct(v){ return ((v-dMin)/span*100); }
 
     headlineEl.innerHTML = winners.length===4
@@ -833,6 +837,7 @@ h1.slide-title{font-size:clamp(2.6rem,6vw,5.6rem);font-weight:800;line-height:1.
     document.getElementById('counter').textContent=String(idx+1).padStart(2,'0')+' / '+String(slides.length).padStart(2,'0');
   }
   function go(i){ idx=Math.max(0,Math.min(slides.length-1,i)); render(); }
+  render();
   document.getElementById('prevBtn').addEventListener('click',function(){ go(idx-1); });
   document.getElementById('nextBtn').addEventListener('click',function(){ go(idx+1); });
   document.addEventListener('keydown',function(e){
