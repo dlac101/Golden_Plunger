@@ -160,7 +160,7 @@ body{background:#05070c;color:var(--text-primary);font:400 16px/1.4 var(--sans);
 @keyframes nameGlow{0%{text-shadow:0 2px 22px rgba(0,0,0,.6);}
   35%{text-shadow:0 0 46px var(--reveal),0 0 20px var(--reveal),0 2px 22px rgba(0,0,0,.6);}
   100%{text-shadow:0 2px 22px rgba(0,0,0,.6);}}
-.pts-num.flash{animation:ptsFlash .7s ease;}
+.pts-num.ptsflash{animation:ptsFlash .7s ease;}
 @keyframes ptsFlash{0%{filter:none;}35%{filter:drop-shadow(0 0 26px #fff) drop-shadow(0 0 10px var(--reveal));}100%{filter:none;}}
 
 /* ============================================================
@@ -771,7 +771,7 @@ body{background:#05070c;color:var(--text-primary);font:400 16px/1.4 var(--sans);
     if(opts.chip){ rec.chip.textContent=opts.chip.text; rec.chip.className='chip '+opts.chip.cls; }
     if(opts.ribbon){ rec.ribbon.textContent=opts.ribbon; }
     later(function(){
-      odometer(rec.pts, team.points, opts.countDur||1500, function(){ rec.pts.classList.add('flash'); });
+      odometer(rec.pts, team.points, opts.countDur||1500, function(){ rec.pts.classList.add('ptsflash'); });
     }, opts.countDelay||650);
   }
   function panelCenter(rec){ return {x:parseFloat(rec.el.style.left)||CENTER_X, y:PANEL_TOP+PANEL_H/2}; }
