@@ -809,8 +809,9 @@ body{background:#05070c;color:var(--text-primary);font:400 16px/1.4 var(--sans);
   // ---- CHARACTER RACE recap (additive supporting beat) ----------------
   // A brief recap inserted before the 4th-place reveal: the sealed panels
   // step back, a compact 4-team card row shows each team's Character Race
-  // total (a hidden-character hunt whose points already fold into TOTAL),
-  // then the panels return in time for stepReveal4. Purely additive; the
+  // total (a task-circuit race scored by supersquad order of arrival, whose
+  // points already fold into TOTAL), then the panels return in time for
+  // stepReveal4. Purely additive; the
   // 4th->3rd->final-two->climax structure and its timings are untouched.
   // builds the Character Race recap DOM (no panel choreography, no timers) so
   // both the live beat and the backward-nav settled renderer share one builder
@@ -818,7 +819,7 @@ body{background:#05070c;color:var(--text-primary);font:400 16px/1.4 var(--sans);
     var wrap=el('crace');
     var head=el('crace-head');
     head.appendChild(el('crace-title','Character Race'));
-    head.appendChild(el('crace-sub','Hidden characters found around camp'));
+    head.appendChild(el('crace-sub','Points by order of arrival at home base'));
     wrap.appendChild(head);
 
     var grid=el('crace-grid');
