@@ -983,10 +983,12 @@ body{background:#05070c;color:var(--text-primary);font:400 16px/1.4 var(--sans);
   ];
   var stepIndex=-1, timer=null, playing=false;
   function runStep(i){
+    // step-to-step advance is operator-driven only (Down/Space) -- no auto-advance
+    // timer is scheduled here; each step's own internal sub-beat timers (count-up,
+    // confetti, commit/dock) still run via later() so the beat plays out once triggered.
     clearTimeout(timer); clearSubs();
     if(i>=steps.length) return;
     stepIndex=i; var st=steps[i]; st.fn();
-    if(st.dur>0){ timer=setTimeout(function(){ runStep(i+1); }, st.dur); }
   }
   function startSequence(){ if(!ready) return; if(playing) return; playing=true; runStep(0); }
   function skip(){ if(!playing) return; runStep(stepIndex+1); }
@@ -1058,8 +1060,8 @@ body{background:#05070c;color:var(--text-primary);font:400 16px/1.4 var(--sans);
   /* ==== OPERATOR CONTROLS (keyboard/mouse for the counsellor only) ==== */
   document.addEventListener('keydown',function(e){
     if(e.key===' '||e.code==='Space'){ e.preventDefault(); stepForward(); }
-    else if(e.key==='ArrowUp'||e.code==='ArrowUp'){ e.preventDefault(); stepForward(); }
-    else if(e.key==='ArrowDown'||e.code==='ArrowDown'){ e.preventDefault(); stepBack(); }
+    else if(e.key==='ArrowDown'||e.code==='ArrowDown'){ e.preventDefault(); stepForward(); }
+    else if(e.key==='ArrowUp'||e.code==='ArrowUp'){ e.preventDefault(); stepBack(); }
     else if(e.key==='r'||e.key==='R'){ e.preventDefault(); restart(); }
     else if(e.key==='f'||e.key==='F'){
       if(!document.fullscreenElement){ document.documentElement.requestFullscreen().catch(function(){}); }
