@@ -539,7 +539,7 @@ body{background:#05070c;color:var(--text-primary);font:400 16px/1.4 var(--sans);
   }
   function fetchScoresOnce(){
     var ctrl=new AbortController();
-    var to=setTimeout(function(){ ctrl.abort(); }, 7000);
+    var to=setTimeout(function(){ ctrl.abort(); }, 8000);
     // always hit the original pub?output=csv (never the rotating signed redirect
     // target); cache-bust so a reload/R gets fresh scores, never a stale copy
     var url=CSV_URL+(CSV_URL.indexOf('?')>-1?'&':'?')+'_cb='+Date.now();
@@ -549,11 +549,14 @@ body{background:#05070c;color:var(--text-primary);font:400 16px/1.4 var(--sans);
             function(e){ clearTimeout(to); throw (e && e.name==='AbortError') ? new Error('request timed out') : e; });
   }
   function loadScores(){
-    // retry a couple times on transient failure (Google's CSV export endpoint
-    // intermittently 400/503s; it recovers instantly). each attempt gets its own
-    // fresh AbortController/signal + cache-bust via fetchScoresOnce(). the error
-    // overlay in bootstrap() only shows after all 3 attempts fail.
-    var maxAttempts=3, backoffs=[1000,2000];
+    // retry on transient failure (Google's CSV export endpoint intermittently
+    // 400/503s; it recovers instantly). Raised from 3/[1000,2000] after frequent
+    // live failures -- most likely the Character Race tab being actively edited
+    // mid-event (Sheet1's SUMIF rollups recalculating disrupts the publish-to-web
+    // export briefly), not the endpoint or code being broken. Each attempt gets
+    // its own fresh AbortController/signal + cache-bust via fetchScoresOnce().
+    // the error overlay in bootstrap() only shows after all 5 attempts fail.
+    var maxAttempts=5, backoffs=[800,1500,2500,4000];
     function attempt(n){
       return fetchScoresOnce().then(null, function(err){
         if(n>=maxAttempts) throw err;
@@ -858,7 +861,7 @@ body{background:#05070c;color:var(--text-primary);font:400 16px/1.4 var(--sans);
   // right up to the transition to the next reveal, then docks into the rail. Steps:
   // reveal4 dur 9500 (inner 1250 => commit 8550, ~5.3s settled hold);
   // reveal3 dur 12500 (inner 1250 => commit 10500, ~7s settled hold).
-  function stepReveal4(){ bigReveal(3,{stampText:'4TH PLACE',ribbon:'Every team ran the race',countDur:1300,dockDelay:7300}); }
+  function stepReveal4(){ bigReveal(3,{stampText:'4TH PLACE',countDur:1300,dockDelay:7300}); }
   function stepReveal3(){ catchUp(1); bigReveal(2,{stampText:'3RD PLACE',chip:{text:'Bronze',cls:'bronze'},confetti:9,confettiDelay:900,countDur:1500,dockDelay:9250}); }
 
   // Independent decelerating colour-flicker of a sealed "?" between the two

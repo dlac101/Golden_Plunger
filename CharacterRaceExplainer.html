@@ -682,19 +682,26 @@ h1.slide-title{font-size:clamp(2.6rem,6vw,5.6rem);font-weight:800;line-height:1.
     });
   }
 
-  /* ==== fetch: cache-busted, 7s AbortController timeout ==== */
+  /* ==== fetch: cache-busted, 8s AbortController timeout ==== */
   function fetchScoresOnce(){
     var ctrl=new AbortController();
-    var to=setTimeout(function(){ ctrl.abort(); },7000);
+    var to=setTimeout(function(){ ctrl.abort(); },8000);
     var url=CSV_URL+(CSV_URL.indexOf('?')>-1?'&':'?')+'_cb='+Date.now();
     return fetch(url,{cache:'no-store',signal:ctrl.signal})
       .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
       .then(function(t){ clearTimeout(to); return parseScoresCSV(t); },
             function(e){ clearTimeout(to); throw (e && e.name==='AbortError') ? new Error('request timed out') : e; });
   }
-  /* ==== retry: up to 3 attempts, backoff, error only after all fail ==== */
+  /* ==== retry: up to 5 attempts, backoff, error only after all fail ====
+     Raised from 3/[1000,2000] after the Sheet started seeing frequent transient
+     failures live -- most likely the Character Race tab being actively edited
+     mid-event (Sheet recalculates the Sheet1 SUMIF rollups, briefly disrupting
+     the publish-to-web CSV export), not the endpoint or code being broken. More
+     attempts + longer backoff rides out that recalculation window instead of
+     surfacing the error overlay from a blip that would have recovered in a
+     second or two anyway. */
   function loadScores(){
-    var maxAttempts=3,backoffs=[1000,2000];
+    var maxAttempts=5,backoffs=[800,1500,2500,4000];
     function attempt(n){
       return fetchScoresOnce().then(null,function(err){
         if(n>=maxAttempts) throw err;
