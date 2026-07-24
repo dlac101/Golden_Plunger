@@ -69,7 +69,7 @@ h1.slide-title{font-size:clamp(2.6rem,6vw,5.6rem);font-weight:800;line-height:1.
 .challenge-grid .illo-pane{display:flex;align-items:center;justify-content:center;min-height:0;height:100%}
 .challenge-grid .illo-pane svg{width:100%;height:100%;max-height:min(52vh,520px)}
 .challenge-copy{display:flex;flex-direction:column;gap:1.4rem;min-height:0;justify-content:center}
-@media (max-width:900px){.challenge-grid{grid-template-columns:1fr}}
+@media (max-width:900px), (max-height:500px){.challenge-grid{grid-template-columns:1fr}}
 
 /* nav */
 #navdots{position:fixed;left:50%;bottom:1.1rem;transform:translateX(-50%);display:flex;gap:.5rem;z-index:50}
@@ -711,13 +711,13 @@ h1.slide-title{font-size:clamp(2.6rem,6vw,5.6rem);font-weight:800;line-height:1.
 }
 
 /* ============================= MOBILE / PHONE TUNING (scoped, projector view above breakpoint is untouched) ============================= */
-@media (max-width:640px){
+@media (max-width:640px), (max-height:500px){
   html,body{overflow-x:hidden;}
   body{height:100vh;height:100dvh;}
   #deck{height:100vh;height:100dvh;}
 
   .slide{
-    padding:1.2rem 1.05rem 3.4rem;
+    padding:3.9rem 1.05rem 3.4rem;
     overflow-y:auto;overflow-x:hidden;
     -webkit-overflow-scrolling:touch;
     justify-content:flex-start;
@@ -733,9 +733,10 @@ h1.slide-title{font-size:clamp(2.6rem,6vw,5.6rem);font-weight:800;line-height:1.
   .rules{gap:.6rem;}
   .rules li{font-size:1rem;padding-left:1.5em;line-height:1.3;}
 
-  .challenge-grid{gap:.9rem;margin-top:.7rem;align-items:stretch;}
-  .challenge-grid .illo-pane svg{max-height:30vh;}
-  .challenge-copy{gap:.9rem;justify-content:flex-start;}
+  .challenge-grid{display:flex;flex-direction:column;flex:none;gap:.9rem;margin-top:.7rem;align-items:stretch;}
+  .challenge-grid .illo-pane{height:auto;flex:none;}
+  .challenge-grid .illo-pane svg{height:auto;max-height:30vh;}
+  .challenge-copy{flex:none;gap:.9rem;justify-content:flex-start;}
 
   /* slide 1 (title hero) */
   #slide1{gap:1rem;justify-content:center;}
@@ -758,9 +759,9 @@ h1.slide-title{font-size:clamp(2.6rem,6vw,5.6rem);font-weight:800;line-height:1.
 
   /* slide 9 (finale) */
   #slide9{gap:.7rem;}
-  #slide9 .s9-body{grid-template-columns:1fr;gap:.7rem;align-items:start;}
-  #slide9 .s9-art{max-height:20vh;}
-  #slide9 .s9-right{gap:.7rem;}
+  #slide9 .s9-body{display:flex;flex-direction:column;flex:none;grid-template-columns:1fr;gap:.7rem;align-items:start;}
+  #slide9 .s9-art{flex:none;max-height:20vh;}
+  #slide9 .s9-right{flex:none;gap:.7rem;}
   #slide9 .s9-steps{gap:.45rem;}
   #slide9 .s9-steps li{font-size:1rem;padding-left:1.5em;}
   #slide9 .s9-score-title{font-size:.9rem;}
