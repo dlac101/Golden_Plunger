@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Character Race</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+:root{
+  --bg-page:#0b0f17;
+  --bg-card:#121820;
+  --bg-code:#0d1219;
+  --border:#1e2d42;
+  --border-subtle:#182030;
+  --cyan:#00c8e6;
+  --cyan-dim:#2596b3;
+  --cyan-glow:rgba(0,200,230,0.12);
+  --text-primary:#dde4ef;
+  --text-secondary:#7a90aa;
+  --text-muted:#7488a1;
+  --accent-yellow:#f5a623;
+  --alpha:#f26a6a;
+  --beta:#5aa2ff;
+  --gamma:#34d17f;
+  --medal-gold:#f5c518;
+  --medal-silver:#c8ccd6;
+  --medal-bronze:#c97a3a;
+  --team-red:#f26a6a;
+  --team-blue:#5aa2ff;
+  --team-green:#34d17f;
+  --team-yellow:#f5c518;
+  --radius:10px;
+  --sans:'Poppins',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;background:var(--bg-page);color-scheme:dark}
+body{background:var(--bg-page);color:var(--text-primary);font:400 1rem/1.5 var(--sans);
+  -webkit-font-smoothing:antialiased;height:100vh;overflow:hidden}
+
+/* deck shell (matches ColorWars.html) */
+#deck{position:relative;height:100vh;width:100vw}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;padding:clamp(1.5rem,4vw,4rem) clamp(1.5rem,3.4vw,3.6rem);
+  opacity:0;transition:opacity .45s ease}
+.slide.active{display:flex;opacity:1}
+.slide::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(ellipse 60% 50% at 50% 0%,color-mix(in srgb,var(--cyan) 7%,transparent),transparent 70%)}
+
+.eyebrow{font-family:var(--sans);font-size:clamp(1rem,1.7vw,1.4rem);font-weight:700;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--cyan);display:flex;align-items:center;gap:.7rem;flex-wrap:wrap}
+h1.slide-title{font-size:clamp(2.6rem,6vw,5.6rem);font-weight:800;line-height:1.05;letter-spacing:-.01em;
+  margin:.4rem 0 0;color:var(--text-primary)}
+.subhead{color:var(--text-primary);opacity:.85;font-size:clamp(1.2rem,2vw,1.7rem);font-weight:500;margin-top:.5rem;max-width:52ch}
+.subhead b{color:var(--cyan);font-weight:700}
+
+/* nav (matches ColorWars.html) */
+#navdots{position:fixed;left:50%;bottom:1.1rem;transform:translateX(-50%);display:flex;gap:.5rem;z-index:50}
+#navdots button{width:.55rem;height:.55rem;border-radius:50%;border:1px solid var(--border);background:var(--bg-card);
+  cursor:pointer;padding:0;transition:background .2s,transform .2s}
+#navdots button[aria-current="true"]{background:var(--cyan);transform:scale(1.35);border-color:var(--cyan)}
+.navbtn{position:fixed;top:50%;transform:translateY(-50%);z-index:50;width:2.6rem;height:2.6rem;border-radius:50%;
+  border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:color .15s,border-color .15s}
+.navbtn:hover{color:var(--cyan);border-color:var(--cyan)}
+.navbtn svg{width:1.2rem;height:1.2rem;fill:currentColor}
+#prevBtn{left:1.1rem}
+#nextBtn{right:1.1rem}
+#fsBtn{position:fixed;top:1.1rem;right:1.1rem;z-index:50;width:2.4rem;height:2.4rem;border-radius:50%;
+  border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);cursor:pointer;
+  display:flex;align-items:center;justify-content:center}
+#fsBtn:hover{color:var(--cyan);border-color:var(--cyan)}
+#fsBtn svg{width:1.1rem;height:1.1rem;fill:currentColor}
+#counter{position:fixed;top:1.2rem;left:1.2rem;z-index:50;font-size:.75rem;font-weight:600;letter-spacing:.1em;
+  color:var(--text-muted);font-family:var(--sans)}
+
+/* ===== SHARED FLAG ENGINE (adapted from ColorWars.html / ColorWarsWinners.html) ===== */
+@keyframes flagRipple{
+  0%,100%{transform:translateY(calc(var(--amp,0)*1px)) skewY(calc(var(--sk,0)*1deg));}
+  50%{transform:translateY(calc(var(--amp,0)*-1px)) skewY(calc(var(--sk,0)*-1deg));}
+}
+@keyframes flagSheen{
+  0%{transform:translateX(var(--sx0,-6px));opacity:0;}30%{opacity:.9;}70%{opacity:.9;}
+  100%{transform:translateX(var(--sx1,60px));opacity:0;}
+}
+@keyframes flagSnap{
+  0%{transform:skewX(0deg) scaleX(1);}6%{transform:skewX(-16deg) scaleX(1.06);}
+  14%{transform:skewX(11deg) scaleX(.965);}22%{transform:skewX(-6deg) scaleX(1.02);}
+  30%{transform:skewX(3deg) scaleX(.99);}38%{transform:skewX(-1.5deg) scaleX(1.005);}
+  46%,100%{transform:skewX(0deg) scaleX(1);}
+}
+@keyframes flagGlow{
+  0%,46%,100%{filter:drop-shadow(0 0 2px var(--gc));}
+  6%{filter:drop-shadow(0 0 14px var(--gc)) drop-shadow(0 0 6px var(--gc));}
+  20%{filter:drop-shadow(0 0 6px var(--gc));}
+}
+.flag-band{transform-box:fill-box;transform-origin:center;animation:flagRipple 2.4s ease-in-out infinite;animation-delay:var(--d,0s);}
+.flag-sheen{animation:flagSheen 3.4s linear infinite;mix-blend-mode:screen;}
+.flag-outline{fill:none;stroke:var(--text-primary);stroke-linejoin:round;}
+.pole{stroke:var(--text-primary);stroke-linecap:round;}
+.mini-flag .cloth-g{animation:flagSnap 2.6s cubic-bezier(.16,.9,.3,1.4) infinite, flagGlow 2.6s ease-out infinite;}
+
+/* ============================= SLIDE 1 — INTRO ============================= */
+#slide1{align-items:center;justify-content:center;text-align:center;gap:clamp(1.2rem,3vh,2.4rem);overflow:hidden;}
+#slide1 .cr-eyebrow{font-size:clamp(1.05rem,1.8vw,1.5rem);font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--cyan);}
+#slide1 .cr-title{margin:0;font-weight:800;line-height:.92;letter-spacing:-.01em;font-size:clamp(3.4rem,10vw,9rem);
+  background:linear-gradient(96deg,var(--team-red) 0%,var(--team-yellow) 34%,var(--team-green) 66%,var(--team-blue) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 6px 34px rgba(0,0,0,.55));animation:crTitlePop 1s cubic-bezier(.16,1,.3,1) both;}
+#slide1 .cr-sub{margin:0;color:var(--text-primary);font-weight:500;font-size:clamp(1.4rem,2.6vw,2.2rem);max-width:34ch;line-height:1.3;}
+#slide1 .cr-sub b{color:#fff;font-weight:700;}
+#slide1 .cr-flags{display:flex;gap:clamp(1.4rem,3.4vw,3rem);align-items:flex-end;margin-top:.4rem;}
+#slide1 .cr-flags .mini-flag{width:clamp(78px,8vw,128px);}
+#slide1 .cr-flags .mini-flag:nth-child(1) .cloth-g{animation-delay:0s;}
+#slide1 .cr-flags .mini-flag:nth-child(2) .cloth-g{animation-delay:.32s;}
+#slide1 .cr-flags .mini-flag:nth-child(3) .cloth-g{animation-delay:.64s;}
+#slide1 .cr-flags .mini-flag:nth-child(4) .cloth-g{animation-delay:.96s;}
+#slide1 .flag-outline{stroke-width:3;}
+@keyframes crTitlePop{0%{transform:scale(.7);opacity:0;}60%{transform:scale(1.05);}100%{transform:scale(1);opacity:1;}}
+
+/* ============================= SLIDE 2 — HOW IT WORKS ============================= */
+#slide2{gap:clamp(1rem,2.4vh,1.8rem);justify-content:center;}
+#slide2 .s2-head{display:flex;flex-direction:column;gap:.3rem;}
+#slide2 .s2-steps{display:flex;flex-direction:column;gap:clamp(.7rem,1.8vh,1.25rem);flex:1;justify-content:center;max-width:1500px;}
+#slide2 .s2-step{display:flex;align-items:center;gap:clamp(1.2rem,2.2vw,1.8rem);background:var(--bg-card);
+  border:1px solid var(--border-subtle);border-left:5px solid var(--cyan);border-radius:var(--radius);
+  padding:clamp(.8rem,1.9vh,1.3rem) clamp(1.3rem,2.4vw,2rem);opacity:0;animation:s2FlowIn .6s ease-out both;}
+#slide2 .s2-step:nth-child(1){animation-delay:.05s;}
+#slide2 .s2-step:nth-child(2){animation-delay:.15s;}
+#slide2 .s2-step:nth-child(3){animation-delay:.25s;}
+#slide2 .s2-step:nth-child(4){animation-delay:.35s;}
+#slide2 .s2-step:nth-child(5){animation-delay:.45s;}
+#slide2 .s2-num{flex:none;width:clamp(2.8rem,4vw,3.6rem);height:clamp(2.8rem,4vw,3.6rem);border-radius:50%;
+  display:grid;place-items:center;font-weight:800;font-size:clamp(1.3rem,2.1vw,1.7rem);color:var(--bg-page);background:var(--cyan);}
+#slide2 .s2-step-txt{display:flex;flex-direction:column;gap:.2rem;min-width:0;}
+#slide2 .s2-step-txt b{color:var(--text-primary);font-size:clamp(1.3rem,2.1vw,1.75rem);font-weight:700;}
+#slide2 .s2-step-txt span{color:var(--text-primary);opacity:.85;font-size:clamp(1.05rem,1.6vw,1.4rem);line-height:1.3;}
+#slide2 .s2-step-txt span b{color:var(--cyan);font-size:inherit;opacity:1;}
+#slide2 .s2-foot{margin:0;background:linear-gradient(90deg,var(--cyan-glow),transparent);border:1px solid var(--border-subtle);
+  border-radius:var(--radius);padding:clamp(.9rem,1.8vh,1.3rem) clamp(1.3rem,2.2vw,1.8rem);
+  font-size:clamp(1.2rem,1.9vw,1.6rem);font-weight:600;color:var(--text-primary);}
+#slide2 .s2-foot b{color:var(--cyan);font-weight:800;}
+@keyframes s2FlowIn{0%{opacity:0;transform:translateX(-22px);}100%{opacity:1;transform:translateX(0);}}
+
+/* ============================= SLIDE 3 — POINT LADDER ============================= */
+#slide3{gap:clamp(.8rem,2vh,1.4rem);}
+#slide3 .s3-head{display:flex;flex-direction:column;gap:.3rem;}
+#slide3 .ladder{display:grid;grid-template-columns:1fr 1fr;gap:clamp(1rem,2.4vw,2.4rem) clamp(2rem,4vw,4rem);
+  flex:1;min-height:0;align-content:center;}
+#slide3 .lcol{display:flex;flex-direction:column;gap:clamp(.5rem,1.3vh,1rem);justify-content:center;}
+#slide3 .lrow{display:grid;grid-template-columns:2.6em 1fr auto;align-items:center;gap:clamp(.8rem,1.6vw,1.4rem);}
+#slide3 .lrank{font-weight:800;font-size:clamp(1.5rem,2.5vw,2.2rem);color:var(--text-primary);text-align:right;
+  font-variant-numeric:tabular-nums;line-height:1;}
+#slide3 .lrank .sup{font-size:.6em;color:var(--text-secondary);}
+#slide3 .lbar-track{height:clamp(1.4rem,2.6vh,2.1rem);border-radius:999px;background:rgba(255,255,255,.05);
+  border:1px solid var(--border-subtle);overflow:hidden;}
+#slide3 .lbar{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--cyan-dim),var(--cyan));
+  box-shadow:0 0 18px var(--cyan-glow);}
+#slide3 .lval{font-weight:800;font-size:clamp(1.5rem,2.5vw,2.2rem);color:#fff;text-align:right;
+  font-variant-numeric:tabular-nums;line-height:1;min-width:3.4em;}
+#slide3 .s3-foot{display:flex;gap:clamp(.8rem,1.6vw,1.4rem);}
+#slide3 .stat{flex:1;background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius);
+  padding:clamp(.7rem,1.5vh,1.1rem) clamp(1rem,1.8vw,1.5rem);display:flex;align-items:baseline;gap:.7rem;}
+#slide3 .stat .big{font-weight:800;font-size:clamp(1.8rem,3.2vw,2.9rem);color:var(--cyan);line-height:1;font-variant-numeric:tabular-nums;}
+#slide3 .stat .lbl{color:var(--text-primary);opacity:.82;font-size:clamp(1rem,1.5vw,1.3rem);line-height:1.2;}
+
+/* ============================= SLIDE 4 — LIVE STANDINGS ============================= */
+#slide4{gap:clamp(1rem,2.4vh,1.8rem);justify-content:flex-start;}
+#slide4 .s4-head{display:flex;flex-direction:column;gap:.3rem;}
+.livetag{display:inline-flex;align-items:center;gap:.6rem;color:var(--text-secondary);font-size:clamp(.95rem,1.4vw,1.25rem);font-weight:600;}
+.livetag .dot{width:.7em;height:.7em;border-radius:50%;background:var(--team-green);box-shadow:0 0 10px var(--team-green);animation:livePulse 2s ease-in-out infinite;}
+@keyframes livePulse{0%,100%{opacity:.4;}50%{opacity:1;}}
+#slide4 .stand{display:flex;flex-direction:column;gap:clamp(.55rem,1.3vh,1rem);flex:1;justify-content:center;}
+#slide4 .srow{display:grid;grid-template-columns:auto auto 1fr auto;align-items:center;gap:clamp(1rem,2vw,1.8rem);
+  background:var(--bg-card);border:1px solid var(--border-subtle);border-left:8px solid var(--tc,var(--border));
+  border-radius:var(--radius);padding:clamp(.65rem,1.4vh,1.1rem) clamp(1.4rem,2.6vw,2.2rem);
+  opacity:0;animation:s2FlowIn .5s ease-out both;}
+#slide4 .srow:nth-child(1){animation-delay:.05s;}
+#slide4 .srow:nth-child(2){animation-delay:.13s;}
+#slide4 .srow:nth-child(3){animation-delay:.21s;}
+#slide4 .srow:nth-child(4){animation-delay:.29s;}
+#slide4 .spos{font-weight:800;font-size:clamp(2rem,3.6vw,3.2rem);color:var(--text-secondary);
+  font-variant-numeric:tabular-nums;line-height:1;width:1.4em;text-align:center;}
+#slide4 .srow.p1 .spos{color:var(--medal-gold);}
+#slide4 .sflag{width:clamp(48px,4.2vw,72px);}
+#slide4 .sflag .cloth-g{animation:flagSnap 2.8s cubic-bezier(.16,.9,.3,1.4) infinite, flagGlow 2.8s ease-out infinite;}
+#slide4 .sflag .flag-outline{stroke-width:3;}
+#slide4 .sinfo{min-width:0;}
+#slide4 .sname{font-weight:800;font-size:clamp(2rem,3.4vw,3rem);text-transform:uppercase;color:var(--tc,#fff);line-height:1;letter-spacing:.01em;}
+#slide4 .smeta{color:var(--text-secondary);font-size:clamp(1rem,1.5vw,1.3rem);margin-top:.2rem;}
+#slide4 .spts{font-weight:800;font-size:clamp(2.2rem,3.9vw,3.3rem);color:#fff;font-variant-numeric:tabular-nums;text-align:right;line-height:1;}
+#slide4 .spts .u{font-size:.42em;color:var(--text-secondary);font-weight:700;letter-spacing:.08em;margin-left:.3em;text-transform:uppercase;}
+
+/* ============================= SLIDE 5 — SWING / CAN WIN ============================= */
+#slide5{gap:clamp(.8rem,2vh,1.4rem);justify-content:flex-start;}
+#slide5 .s5-head{display:flex;flex-direction:column;gap:.3rem;}
+#slide5 #swingBody:not([hidden]){display:flex;flex-direction:column;justify-content:center;flex:1;min-height:0;}
+#slide5 .headline{background:linear-gradient(160deg,rgba(0,200,230,.10),rgba(0,200,230,.02));
+  border:1px solid var(--cyan-dim);border-radius:var(--radius);padding:clamp(.9rem,1.9vh,1.35rem) clamp(1.3rem,2.4vw,2rem);
+  font-size:clamp(1.3rem,2.1vw,1.85rem);line-height:1.35;font-weight:500;}
+#slide5 .headline b{color:var(--cyan);font-weight:800;}
+#slide5 .rangewrap{display:flex;flex-direction:column;gap:clamp(.8rem,2vh,1.5rem);}
+#slide5 .rrow{display:grid;grid-template-columns:clamp(11rem,15vw,15rem) 1fr;gap:clamp(1rem,2vw,1.8rem);align-items:center;}
+#slide5 .rlabel{display:flex;flex-direction:column;gap:.4rem;}
+#slide5 .rn{font-weight:800;text-transform:uppercase;font-size:clamp(1.5rem,2.5vw,2.2rem);color:var(--tc,#fff);line-height:1;}
+#slide5 .badge{display:inline-block;font-weight:700;font-size:clamp(.85rem,1.25vw,1.05rem);letter-spacing:.05em;
+  text-transform:uppercase;padding:.3em .8em;border-radius:999px;width:max-content;}
+#slide5 .badge.win{color:#05070c;background:var(--tc,var(--cyan));}
+#slide5 .badge.climb{color:var(--cyan);background:rgba(0,200,230,.12);border:1px solid var(--cyan-dim);}
+#slide5 .rtrack{position:relative;height:clamp(2.6rem,4.4vh,3.4rem);}
+#slide5 .rseg{position:absolute;top:15%;height:70%;border-radius:999px;background:var(--tc,var(--cyan));opacity:.34;border:1.5px solid var(--tc,var(--cyan));}
+#slide5 .rdot{position:absolute;top:-6%;height:112%;width:5px;border-radius:3px;background:#fff;box-shadow:0 0 12px rgba(255,255,255,.7);}
+#slide5 .rdot .cur{position:absolute;top:-1.5em;left:50%;transform:translateX(-50%);font-size:clamp(.95rem,1.4vw,1.2rem);font-weight:700;color:#fff;white-space:nowrap;}
+#slide5 .rend{position:absolute;top:100%;margin-top:.2em;font-size:clamp(.9rem,1.35vw,1.15rem);color:var(--text-secondary);font-variant-numeric:tabular-nums;white-space:nowrap;}
+#slide5 .rmin{transform:translateX(0);}
+#slide5 .rmax{transform:translateX(-100%);}
+#slide5 .leaderline{position:absolute;top:-14%;height:128%;width:0;border-left:2.5px dashed var(--medal-gold);opacity:.7;}
+#slide5 .legend{display:flex;flex-wrap:wrap;gap:.8rem clamp(1.4rem,2.4vw,2.2rem);font-size:clamp(.95rem,1.4vw,1.2rem);color:var(--text-secondary);}
+#slide5 .legend .k{display:inline-flex;align-items:center;gap:.5rem;}
+#slide5 .legend .sw{width:1.6rem;height:.8rem;border-radius:3px;display:inline-block;}
+#slide5 .legend .sw.range{background:var(--cyan);opacity:.34;border:1px solid var(--cyan);}
+#slide5 .legend .sw.now{width:5px;height:1.1rem;background:#fff;border-radius:3px;}
+#slide5 .legend .sw.lead{width:0;height:1.1rem;border-left:2.5px dashed var(--medal-gold);}
+#slide5 .note{color:var(--text-secondary);font-size:clamp(1rem,1.5vw,1.3rem);line-height:1.35;}
+
+/* ===== shared data-slide status (loading / error) ===== */
+.dstatus{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;text-align:center;}
+.dstatus .st{font-weight:800;font-size:clamp(1.8rem,3.2vw,2.8rem);}
+.dstatus.loading .st{color:var(--cyan);}
+.dstatus.error .st{color:var(--team-red);}
+.dstatus .ss{color:var(--text-primary);font-size:clamp(1.2rem,1.9vw,1.6rem);max-width:40ch;}
+.dstatus .retry{margin-top:.6rem;font:700 clamp(1.05rem,1.6vw,1.4rem) var(--sans);color:#05070c;background:var(--cyan);
+  border:none;border-radius:999px;padding:.7em 1.6em;cursor:pointer;letter-spacing:.04em;text-transform:uppercase;}
+.dstatus .retry:hover{filter:brightness(1.08);}
+.dstatus .retry:focus-visible{outline:3px solid var(--cyan);outline-offset:3px;}
+[hidden]{display:none !important;}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
+}
+@media (forced-colors:active){
+  .navbtn,#fsBtn,.s2-step,.srow,.stat,.rseg,.headline{border:1px solid ButtonText}
+  #slide3 .lbar,#slide5 .badge.win{forced-color-adjust:none}
+}
+
+/* ===== phone / small-screen tuning (projector view above breakpoint untouched) ===== */
+@media (max-width:640px), (max-height:500px){
+  html,body{overflow-x:hidden}
+  body,#deck{height:100vh;height:100dvh}
+  .slide{padding-top:max(3.9rem,env(safe-area-inset-top) + 3.9rem);
+    padding-right:max(1.05rem,env(safe-area-inset-right) + 1.05rem);
+    padding-bottom:max(3.4rem,env(safe-area-inset-bottom) + 3.4rem);
+    padding-left:max(1.05rem,env(safe-area-inset-left) + 1.05rem);
+    overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;justify-content:flex-start}
+  #slide1{overflow-y:auto;overflow-x:hidden}
+  h1.slide-title{font-size:1.7rem}
+  .subhead{font-size:1.05rem}
+  #slide1 .cr-title{font-size:2.6rem}
+  #slide1 .cr-sub{font-size:1.1rem}
+  #slide1 .cr-flags .mini-flag{width:clamp(40px,12vw,58px)}
+  #slide3 .ladder{grid-template-columns:1fr;gap:.4rem}
+  #slide3 .lcol:nth-child(2){margin-top:.4rem}
+  #slide3 .lrank,#slide3 .lval{font-size:1.15rem}
+  #slide3 .s3-foot{flex-direction:column}
+  #slide4 .srow{grid-template-columns:auto 1fr auto;gap:.8rem}
+  #slide4 .sflag{display:none}
+  #slide4 .sname{font-size:1.4rem}
+  #slide4 .spts{font-size:1.5rem}
+  #slide5 .rrow{grid-template-columns:1fr;gap:.5rem}
+  #counter{top:max(1.2rem,env(safe-area-inset-top) + 1.2rem);left:max(1.2rem,env(safe-area-inset-left) + 1.2rem)}
+  .navbtn{width:2.9rem;height:2.9rem}
+  #prevBtn{left:max(.5rem,env(safe-area-inset-left) + .5rem)}
+  #nextBtn{right:max(.5rem,env(safe-area-inset-right) + .5rem)}
+  #fsBtn{width:2.9rem;height:2.9rem;top:max(.6rem,env(safe-area-inset-top) + .6rem);right:max(.6rem,env(safe-area-inset-right) + .6rem)}
+  #navdots{bottom:max(.4rem,env(safe-area-inset-bottom) + .4rem);flex-wrap:wrap;justify-content:center;
+    max-width:calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right))}
+  #navdots button{width:2.1rem;height:2.1rem;padding:.72rem;border:none;background-clip:content-box;background-color:var(--bg-card)}
+  #navdots button[aria-current="true"]{background-color:var(--cyan);background-clip:content-box;transform:none}
+}
+</style>
+</head>
+<body>
+
+<div id="counter">01 / 05</div>
+<button id="fsBtn" type="button" aria-label="Toggle fullscreen">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+</button>
+<button id="prevBtn" class="navbtn" type="button" aria-label="Previous slide">
+  <svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></svg>
+</button>
+<button id="nextBtn" class="navbtn" type="button" aria-label="Next slide">
+  <svg viewBox="0 0 24 24"><path d="M8.6 16.6 10 18l6-6-6-6-1.4 1.4L13.2 12z"/></svg>
+</button>
+
+<div id="deck">
+
+  <!-- ===== SLIDE 1 : INTRO ===== -->
+  <section class="slide" id="slide1">
+    <div class="cr-eyebrow">Color Wars &middot; Scoring</div>
+    <h1 class="cr-title">The Character Race</h1>
+    <p class="cr-sub">Runs like <b>The Amazing Race</b>: all speed and strategy, no luck. Here is how it works, and why every team still has room to move.</p>
+    <div class="cr-flags" id="heroFlags" aria-hidden="true"></div>
+  </section>
+
+  <!-- ===== SLIDE 2 : HOW IT WORKS ===== -->
+  <section class="slide" id="slide2">
+    <div class="s2-head">
+      <div class="eyebrow">How the race works</div>
+      <h1 class="slide-title">Run the circuit</h1>
+    </div>
+    <div class="s2-steps">
+      <div class="s2-step"><div class="s2-num">1</div><div class="s2-step-txt">
+        <b>Five locations</b><span>Each supersquad runs a circuit of <b>5 different locations</b> around camp.</span></div></div>
+      <div class="s2-step"><div class="s2-num">2</div><div class="s2-step-txt">
+        <b>Pick one of two tasks</b><span>At every location there are two tasks. Complete <b>one</b> to earn that location's marker.</span></div></div>
+      <div class="s2-step"><div class="s2-num">3</div><div class="s2-step-txt">
+        <b>Beat the traffic</b><span>Only <b>one team</b> can work a task at a time, so plan your order to avoid waiting in line.</span></div></div>
+      <div class="s2-step"><div class="s2-num">4</div><div class="s2-step-txt">
+        <b>First to all 5 markers wins the place</b><span>The supersquad that finishes its full circuit soonest takes the top placement.</span></div></div>
+      <div class="s2-step"><div class="s2-num">5</div><div class="s2-step-txt">
+        <b>Strategy, not chance</b><span>No scavenger hunt, no luck. It is a <b>planned task race</b>, start to finish.</span></div></div>
+    </div>
+    <p class="s2-foot">All <b>12 supersquads</b> (4 teams &times; 3 squads) are ranked in finish order, 1st all the way down to 12th.</p>
+  </section>
+
+  <!-- ===== SLIDE 3 : POINT LADDER ===== -->
+  <section class="slide" id="slide3">
+    <div class="s3-head">
+      <div class="eyebrow">What each place is worth</div>
+      <h1 class="slide-title">The point ladder</h1>
+    </div>
+    <div class="ladder">
+      <div class="lcol" id="ladderL"></div>
+      <div class="lcol" id="ladderR"></div>
+    </div>
+    <div class="s3-foot">
+      <div class="stat"><span class="big">3,030</span><span class="lbl">most one team can grab (top 3 places)</span></div>
+      <div class="stat"><span class="big">600</span><span class="lbl">fewest a team can end with (bottom 3)</span></div>
+      <div class="stat"><span class="big">7,260</span><span class="lbl">total race points in play</span></div>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 4 : LIVE STANDINGS ===== -->
+  <section class="slide" id="slide4">
+    <div class="s4-head">
+      <div class="livetag"><span class="dot"></span><span>Live from the scoresheet</span></div>
+      <div class="eyebrow" style="margin-top:.2rem">Where we stand</div>
+      <h1 class="slide-title" id="standTitle">Current totals</h1>
+      <p class="subhead" id="standSub" hidden></p>
+    </div>
+    <div class="stand" id="standings" hidden></div>
+    <div class="dstatus loading" id="standStatus">
+      <div class="st">Loading live scores&hellip;</div>
+      <div class="ss">Pulling the latest totals from the scoresheet.</div>
+    </div>
+  </section>
+
+  <!-- ===== SLIDE 5 : SWING / CAN WIN ===== -->
+  <section class="slide" id="slide5">
+    <div class="s5-head">
+      <div class="eyebrow">Can it still change?</div>
+      <h1 class="slide-title">Every place is in play</h1>
+    </div>
+    <div id="swingBody" hidden>
+      <div class="headline" id="headline" style="margin-bottom:clamp(1rem,2.4vh,1.8rem)"></div>
+      <div class="rangewrap" id="rangewrap"></div>
+      <div class="legend" style="margin-top:clamp(1rem,2vh,1.5rem)">
+        <span class="k"><span class="sw range"></span> Possible finish (worst case to best case)</span>
+        <span class="k"><span class="sw now"></span> Score right now</span>
+        <span class="k"><span class="sw lead"></span> Current leader's worst case</span>
+      </div>
+      <p class="note" id="swingNote" style="margin-top:clamp(.8rem,1.6vh,1.2rem)"></p>
+    </div>
+    <div class="dstatus loading" id="swingStatus">
+      <div class="st">Loading live scores&hellip;</div>
+      <div class="ss">Pulling the latest totals from the scoresheet.</div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ==== LIVE SCORE SOURCE (same published CSV + by-name parsing as ColorWarsWinners.html) ====
+     Sheet1's TOTAL already includes each team's Character Race points (SUMIF'd upstream);
+     the "Character Race" column is read separately only to base the projection on non-race points. */
+  var CSV_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vSjBcNFy5A2KI4buO2sz7MH4mO_MAKTVfVvvIqqNBsZr2HNerP3mscjVBRB3LpL1BsI59NIevSDMrpK/pub?gid=0&single=true&output=csv';
+  var COLOR_MAP={RED:'var(--team-red)',BLUE:'var(--team-blue)',GREEN:'var(--team-green)',YELLOW:'var(--team-yellow)'};
+  var ORDER=['RED','BLUE','GREEN','YELLOW'];
+
+  /* fixed placement ladder (1st..12th), winner-take-all per slot */
+  var SLOTS=[1100,1010,920,830,740,650,560,470,380,290,200,110];
+  var TOP3=SLOTS[0]+SLOTS[1]+SLOTS[2];               // 3030
+  var BOTTOM3=SLOTS[9]+SLOTS[10]+SLOTS[11];          // 600
+  var POOL_TOTAL=SLOTS.reduce(function(a,b){return a+b;},0); // 7260
+
+  /* ==== SVG flag builder (ripple bands + snap + sheen; from ColorWarsWinners.html) ==== */
+  function flagSVG(color,id,o){
+    o=o||{};
+    var W=o.W||38,H=o.H||28,n=o.n||6,maxAmp=o.maxAmp||5.7,maxSk=o.maxSk||3.4;
+    var notch=(o.notch!=null)?o.notch:W*0.2;
+    var poleX=o.poleX||14,top=o.top||12,poleUp=o.poleUp||6,poleDown=o.poleDown||50;
+    var stagger=o.stagger||0.13,poleW=o.poleW||4,outW=o.outlineW||2.6,padR=o.padR||8,padB=o.padB||6;
+    var vbW=poleX+W+padR,vbH=top+H+poleDown+padB;
+    var cloth='M0 0 L'+W+' 0 L'+(W-notch)+' '+(H/2)+' L'+W+' '+H+' L0 '+H+' Z';
+    var bandW=W/n,yTop=(-H*0.14),bandH=(H*1.28),bands='';
+    for(var i=0;i<n;i++){
+      var amp=(0.6+(maxAmp-0.6)*(i/(n-1))).toFixed(2);
+      var sk=(0.4+(maxSk-0.4)*(i/(n-1))).toFixed(2);
+      var d=(-i*stagger-(o.baseDelay||0)).toFixed(2);
+      var x=(i*bandW).toFixed(2),w=(bandW+(i<n-1?0.8:0)).toFixed(2);
+      bands+='<rect class="flag-band" x="'+x+'" y="'+yTop.toFixed(2)+'" width="'+w+'" height="'+bandH.toFixed(2)+'" fill="'+color+'" style="--amp:'+amp+';--sk:'+sk+';--d:'+d+'s"/>';
+    }
+    var sheenX=(-W*0.1),sheenW=(W*0.28);
+    return '<svg class="flag-svg" viewBox="0 0 '+vbW.toFixed(1)+' '+vbH.toFixed(1)+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true" style="width:100%;height:auto">'
+      +'<defs><linearGradient id="sh'+id+'" x1="0" y1="0" x2="1" y2="0">'
+      +'<stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".4"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>'
+      +'</linearGradient><clipPath id="cl'+id+'"><path d="'+cloth+'"/></clipPath></defs>'
+      +'<line class="pole" x1="'+poleX+'" y1="'+(top-poleUp)+'" x2="'+poleX+'" y2="'+(top+H+poleDown)+'" stroke-width="'+poleW+'"/>'
+      +'<g transform="translate('+poleX+','+top+')"><g class="cloth-g" style="transform-origin:0px 0px;--gc:'+color+';">'
+      +'<g clip-path="url(#cl'+id+')">'+bands
+      +'<rect class="flag-sheen" x="'+sheenX.toFixed(2)+'" y="'+yTop.toFixed(2)+'" width="'+sheenW.toFixed(2)+'" height="'+bandH.toFixed(2)+'" fill="url(#sh'+id+')" style="--sx0:'+sheenX.toFixed(1)+'px;--sx1:'+(W*1.05).toFixed(1)+'px"/>'
+      +'</g><path class="flag-outline" d="'+cloth+'" stroke-width="'+outW+'"/></g></g></svg>';
+  }
+
+  /* ==== hero flags (slide 1) ==== */
+  (function heroFlags(){
+    var wrap=document.getElementById('heroFlags');
+    ['var(--team-red)','var(--team-blue)','var(--team-yellow)','var(--team-green)'].forEach(function(c,i){
+      var d=document.createElement('div'); d.className='mini-flag';
+      d.innerHTML=flagSVG(c,'H'+i,{W:38,H:28,n:6,poleX:14,top:12,poleUp:6,poleDown:50,poleW:4,outlineW:3,baseDelay:i*0.32});
+      wrap.appendChild(d);
+    });
+  })();
+
+  /* ==== point ladder (slide 3) ==== */
+  (function ladder(){
+    var L=document.getElementById('ladderL'),R=document.getElementById('ladderR'),max=SLOTS[0];
+    function row(i){
+      var place=i+1,sup={1:'st',2:'nd',3:'rd'}[place]||'th',pct=Math.round(SLOTS[i]/max*100);
+      return '<div class="lrow"><div class="lrank">'+place+'<span class="sup">'+sup+'</span></div>'
+        +'<div class="lbar-track"><div class="lbar" style="width:'+pct+'%"></div></div>'
+        +'<div class="lval">'+SLOTS[i].toLocaleString()+'</div></div>';
+    }
+    var l='',r='';
+    for(var i=0;i<6;i++) l+=row(i);
+    for(var j=6;j<12;j++) r+=row(j);
+    L.innerHTML=l; R.innerHTML=r;
+  })();
+
+  /* ==== CSV parse (by-name Team / TOTAL / Character Race) ==== */
+  function parseScoresCSV(text){
+    var lines=text.split(/\r?\n/).filter(function(l){return l.trim().length;});
+    var headerIdx=-1,cols=null;
+    for(var i=0;i<lines.length;i++){
+      var c=lines[i].split(',');
+      if((c[0]||'').trim().toLowerCase()==='team'){ headerIdx=i; cols=c; break; }
+    }
+    if(headerIdx<0) throw new Error('scoresheet header (Team,...) not found');
+    var totalIdx=-1,raceIdx=-1;
+    for(var j=0;j<cols.length;j++){
+      var h=(cols[j]||'').trim().toUpperCase();
+      if(h==='TOTAL') totalIdx=j; else if(h==='CHARACTER RACE') raceIdx=j;
+    }
+    if(totalIdx<0) throw new Error('TOTAL column not found');
+    var scores={};
+    for(var k=headerIdx+1;k<lines.length;k++){
+      var r=lines[k].split(',');
+      var nm=(r[0]||'').trim().toUpperCase();
+      if(!COLOR_MAP[nm] || scores[nm]!=null) continue;
+      var pts=parseInt((r[totalIdx]||'').trim(),10);
+      if(isNaN(pts)) throw new Error('non-numeric TOTAL for '+nm);
+      var race=0;
+      if(raceIdx>-1){ var rv=parseInt((r[raceIdx]||'').trim(),10); race=isNaN(rv)?0:rv; }
+      scores[nm]={total:pts,race:race};
+    }
+    if(Object.keys(scores).length!==4) throw new Error('expected 4 team rows, found '+Object.keys(scores).length);
+    return ORDER.map(function(n){
+      return {name:n,color:COLOR_MAP[n],total:scores[n].total,race:scores[n].race,base:scores[n].total-scores[n].race};
+    });
+  }
+
+  /* ==== fetch: cache-busted, 7s AbortController timeout ==== */
+  function fetchScoresOnce(){
+    var ctrl=new AbortController();
+    var to=setTimeout(function(){ ctrl.abort(); },7000);
+    var url=CSV_URL+(CSV_URL.indexOf('?')>-1?'&':'?')+'_cb='+Date.now();
+    return fetch(url,{cache:'no-store',signal:ctrl.signal})
+      .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
+      .then(function(t){ clearTimeout(to); return parseScoresCSV(t); },
+            function(e){ clearTimeout(to); throw (e && e.name==='AbortError') ? new Error('request timed out') : e; });
+  }
+  /* ==== retry: up to 3 attempts, backoff, error only after all fail ==== */
+  function loadScores(){
+    var maxAttempts=3,backoffs=[1000,2000];
+    function attempt(n){
+      return fetchScoresOnce().then(null,function(err){
+        if(n>=maxAttempts) throw err;
+        return new Promise(function(res){ setTimeout(res,backoffs[n-1]); }).then(function(){ return attempt(n+1); });
+      });
+    }
+    return attempt(1);
+  }
+
+  /* ==== can a team still win 1st outright if the race were run from here?
+     Give the team the top 3 places, then distribute the remaining 9 among the
+     other three (3 each) to keep the strongest rival lowest. Brute force. ==== */
+  function combos3(arr){
+    var out=[];
+    for(var a=0;a<arr.length-2;a++)for(var b=a+1;b<arr.length-1;b++)for(var c=b+1;c<arr.length;c++) out.push([arr[a],arr[b],arr[c]]);
+    return out;
+  }
+  function sum(a){ return a.reduce(function(x,y){return x+y;},0); }
+  function canWinFirst(team,teams){
+    var tFinal=team.base+TOP3;
+    var rivals=teams.filter(function(x){return x.name!==team.name;});
+    var rest=SLOTS.slice(3),minMax=Infinity;
+    combos3(rest).forEach(function(c1){
+      var rem1=rest.filter(function(v){return c1.indexOf(v)<0;});
+      combos3(rem1).forEach(function(c2){
+        var c3=rem1.filter(function(v){return c2.indexOf(v)<0;});
+        var mx=Math.max(rivals[0].base+sum(c1),rivals[1].base+sum(c2),rivals[2].base+sum(c3));
+        if(mx<minMax) minMax=mx;
+      });
+    });
+    return minMax<tFinal;
+  }
+
+  /* ==== render live data into slides 4 + 5 ==== */
+  var standStatus=document.getElementById('standStatus');
+  var standings=document.getElementById('standings');
+  var standSub=document.getElementById('standSub');
+  var swingStatus=document.getElementById('swingStatus');
+  var swingBody=document.getElementById('swingBody');
+  var headlineEl=document.getElementById('headline');
+  var rangeEl=document.getElementById('rangewrap');
+  var swingNote=document.getElementById('swingNote');
+
+  function renderData(teams){
+    var byTotal=teams.slice().sort(function(a,b){return b.total-a.total;});
+    var raceStarted=teams.some(function(t){return t.race>0;});
+    var claimed=teams.reduce(function(a,t){return a+t.race;},0);
+
+    /* --- slide 4 : standings --- */
+    standSub.textContent = raceStarted
+      ? 'Totals include Character Race points earned so far.'
+      : 'The Character Race has not been scored yet, so these are the pre-race totals.';
+    standSub.hidden=false;
+    standings.innerHTML=byTotal.map(function(t,i){
+      var meta = raceStarted
+        ? (t.race>0 ? t.race.toLocaleString()+' pts from the race so far' : 'no race points yet')
+        : 'race not yet run';
+      return '<div class="srow'+(i===0?' p1':'')+'" style="--tc:'+t.color+'">'
+        +'<div class="spos">'+(i+1)+'</div>'
+        +'<div class="sflag">'+flagSVG(t.color,'S'+t.name,{W:38,H:28,n:6,poleX:14,top:12,poleUp:6,poleDown:50,poleW:4,outlineW:3,baseDelay:i*0.3})+'</div>'
+        +'<div class="sinfo"><div class="sname">'+t.name+'</div><div class="smeta">'+meta+'</div></div>'
+        +'<div class="spts">'+t.total.toLocaleString()+'<span class="u">pts</span></div></div>';
+    }).join('');
+    standStatus.hidden=true; standings.hidden=false;
+
+    /* --- slide 5 : swing / can-win --- */
+    var winners=teams.filter(function(t){return canWinFirst(t,teams);});
+    var leaderFloor=byTotal[0].base+BOTTOM3;
+    var floors=teams.map(function(t){return t.base+BOTTOM3;});
+    var ceils=teams.map(function(t){return t.base+TOP3;});
+    var rawMin=Math.min.apply(null,floors),rawMax=Math.max.apply(null,ceils),rawSpan=rawMax-rawMin;
+    var dMin=rawMin-rawSpan*0.05, dMax=rawMax+rawSpan*0.05, span=dMax-dMin;
+    function pct(v){ return ((v-dMin)/span*100); }
+
+    headlineEl.innerHTML = winners.length===4
+      ? 'It is wide open: <b>all four teams</b> can still take 1st, and the race can reshuffle every place on the board.'
+      : '<b>'+winners.length+' of the 4 teams</b> can still win 1st outright, and every team can finish above the current leader\'s worst case. The race reshuffles the whole board.';
+
+    rangeEl.innerHTML=byTotal.map(function(t){
+      var lo=t.base+BOTTOM3,hi=t.base+TOP3,cur=t.total,canWin=winners.indexOf(t)>-1;
+      var badge = canWin
+        ? '<span class="badge win" style="--tc:'+t.color+'">In the hunt for 1st</span>'
+        : '<span class="badge climb">Can still climb</span>';
+      return '<div class="rrow" style="--tc:'+t.color+'">'
+        +'<div class="rlabel"><span class="rn">'+t.name+'</span>'+badge+'</div>'
+        +'<div class="rtrack">'
+          +'<div class="leaderline" style="left:'+pct(leaderFloor).toFixed(2)+'%"></div>'
+          +'<div class="rseg" style="left:'+pct(lo).toFixed(2)+'%;width:'+((hi-lo)/span*100).toFixed(2)+'%"></div>'
+          +'<div class="rdot" style="left:'+pct(cur).toFixed(2)+'%"><span class="cur">'+cur.toLocaleString()+'</span></div>'
+          +'<div class="rend rmin" style="left:'+pct(lo).toFixed(2)+'%">'+lo.toLocaleString()+'</div>'
+          +'<div class="rend rmax" style="left:'+pct(hi).toFixed(2)+'%">'+hi.toLocaleString()+'</div>'
+        +'</div></div>';
+    }).join('');
+
+    swingNote.innerHTML = raceStarted
+      ? 'Race underway ('+claimed.toLocaleString()+' of '+POOL_TOTAL.toLocaleString()+' race points claimed). Ranges show each team\'s possible finish if the rest of the race goes their best or worst way.'
+      : 'Every team is guaranteed exactly 3 of the 12 places, so the race adds at least '+BOTTOM3.toLocaleString()+' and at most '+TOP3.toLocaleString()+' to each team. Those ranges overlap, which is why the standings are not locked.';
+
+    swingStatus.hidden=true; swingBody.hidden=false;
+  }
+
+  function showLoading(){
+    [standStatus,swingStatus].forEach(function(s){ s.className='dstatus loading'; s.hidden=false;
+      s.innerHTML='<div class="st">Loading live scores&hellip;</div><div class="ss">Pulling the latest totals from the scoresheet.</div>'; });
+    standings.hidden=true; swingBody.hidden=true; standSub.hidden=true;
+  }
+  function showError(){
+    [standStatus,swingStatus].forEach(function(s){ s.className='dstatus error'; s.hidden=false;
+      s.innerHTML='<div class="st">Could not load the live scores</div>'
+        +'<div class="ss">Check the internet connection, then try again.</div>'
+        +'<button class="retry" type="button">Try again</button>';
+      s.querySelector('.retry').addEventListener('click',boot);
+    });
+    standings.hidden=true; swingBody.hidden=true; standSub.hidden=true;
+  }
+  function boot(){
+    showLoading();
+    loadScores().then(renderData,showError);
+  }
+  boot();
+
+  /* ==== DECK SHELL (nav dots, counter, prev/next, keyboard, fullscreen, swipe) ==== */
+  var slides=Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var idx=0, dotsWrap=document.createElement('div');
+  dotsWrap.id='navdots'; document.body.appendChild(dotsWrap);
+  slides.forEach(function(s,i){
+    var b=document.createElement('button');
+    b.type='button'; b.setAttribute('aria-label','Go to slide '+(i+1));
+    b.addEventListener('click',function(){ go(i); });
+    dotsWrap.appendChild(b);
+  });
+  function render(){
+    slides.forEach(function(s,i){ s.classList.toggle('active',i===idx); });
+    Array.prototype.forEach.call(dotsWrap.children,function(d,i){
+      if(i===idx) d.setAttribute('aria-current','true'); else d.removeAttribute('aria-current');
+    });
+    document.getElementById('counter').textContent=String(idx+1).padStart(2,'0')+' / '+String(slides.length).padStart(2,'0');
+  }
+  function go(i){ idx=Math.max(0,Math.min(slides.length-1,i)); render(); }
+  document.getElementById('prevBtn').addEventListener('click',function(){ go(idx-1); });
+  document.getElementById('nextBtn').addEventListener('click',function(){ go(idx+1); });
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){ go(idx+1); e.preventDefault(); }
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){ go(idx-1); e.preventDefault(); }
+    else if(e.key==='Home') go(0);
+    else if(e.key==='End') go(slides.length-1);
+    else if(e.key==='f'||e.key==='F') toggleFs();
+  });
+  function toggleFs(){
+    if(!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function(){});
+    else document.exitFullscreen();
+  }
+  document.getElementById('fsBtn').addEventListener('click',toggleFs);
+
+  var tsX=0,tsY=0,tsT=0,tsActive=false;
+  document.addEventListener('touchstart',function(e){
+    if(!e.touches||e.touches.length!==1) return;
+    tsX=e.touches[0].clientX; tsY=e.touches[0].clientY; tsT=Date.now(); tsActive=true;
+  },{passive:true});
+  document.addEventListener('touchend',function(e){
+    if(!tsActive) return; tsActive=false;
+    if(!e.changedTouches||e.changedTouches.length!==1) return;
+    var dx=e.changedTouches[0].clientX-tsX, dy=e.changedTouches[0].clientY-tsY;
+    if(Date.now()-tsT>800) return;
+    if(Math.abs(dx)<50) return;
+    if(Math.abs(dx)<Math.abs(dy)*1.5) return;
+    if(dx<0) go(idx+1); else go(idx-1);
+  },{passive:true});
+
+  render();
+})();
+</script>
+</body>
+</html>
