@@ -742,15 +742,18 @@ body{background:#05070c;color:var(--text-primary);font:400 16px/1.4 var(--sans);
   }
   function el(cls,txt){ var d=document.createElement('div'); d.className=cls; if(txt) d.textContent=txt; return d; }
 
-  // Briefly recede the giant champion name/points/stamp (and restore them) so a
+  // Briefly recede the giant champion name/stamp (and restore them) so a
   // simultaneous runner-up reveal in the combined climax does not read as
   // competing with the champion. Clears the fill-mode animations first, because a
   // running CSS animation with fill:both otherwise wins over these inline values.
+  // The champion POINTS are intentionally left untouched (never dimmed): they have
+  // just finished their headline count-up, and dimming them read as the number
+  // vanishing the instant it finished counting. They stay at full brightness (held
+  // at opacity 1 by their own leadIn-forwards) through the whole runner-up beat.
   function championDim(dim){
-    var nm=center.querySelector('.champ-name'), pts=center.querySelector('.champ-pts'), st=center.querySelector('.champ-stamp');
-    [nm,pts,st].forEach(function(e){ if(!e) return; e.style.animation='none'; e.style.transition='opacity .55s ease, transform .55s ease'; });
+    var nm=center.querySelector('.champ-name'), st=center.querySelector('.champ-stamp');
+    [nm,st].forEach(function(e){ if(!e) return; e.style.animation='none'; e.style.transition='opacity .55s ease, transform .55s ease'; });
     if(st){ st.style.transform='translateX(-50%) scale(1)'; st.style.opacity=dim?'0.24':'1'; }
-    if(pts){ pts.style.opacity=dim?'0.18':'1'; }
     if(nm){ nm.style.transform='translateX(-50%) scale('+(dim?'.82':'1')+')'; nm.style.opacity=dim?'0.24':'1'; }
   }
 
@@ -850,10 +853,13 @@ body{background:#05070c;color:var(--text-primary);font:400 16px/1.4 var(--sans);
     later(function(){ TEAMS.forEach(function(t){ var rec=panelMap[t.name]; if(rec) rec.el.style.setProperty('--dy','0px'); }); }, 6600);
   }
 
-  // dockDelay lengthened (was 4200/4600) so the settled point total holds on the
-  // big panel ~4.5s before the whole panel fades, instead of only ~2.3-2.5s
-  function stepReveal4(){ bigReveal(3,{stampText:'4TH PLACE',ribbon:'Every team ran the race',countDur:1300,dockDelay:6200}); }
-  function stepReveal3(){ catchUp(1); bigReveal(2,{stampText:'3RD PLACE',chip:{text:'Bronze',cls:'bronze'},confetti:9,confettiDelay:900,countDur:1500,dockDelay:6600}); }
+  // dockDelay holds the settled point total on the big panel until near the end of
+  // each step (commit ~0.9s/~2s before the step advances) so the number persists
+  // right up to the transition to the next reveal, then docks into the rail. Steps:
+  // reveal4 dur 9500 (inner 1250 => commit 8550, ~5.3s settled hold);
+  // reveal3 dur 12500 (inner 1250 => commit 10500, ~7s settled hold).
+  function stepReveal4(){ bigReveal(3,{stampText:'4TH PLACE',ribbon:'Every team ran the race',countDur:1300,dockDelay:7300}); }
+  function stepReveal3(){ catchUp(1); bigReveal(2,{stampText:'3RD PLACE',chip:{text:'Bronze',cls:'bronze'},confetti:9,confettiDelay:900,countDur:1500,dockDelay:9250}); }
 
   // Independent decelerating colour-flicker of a sealed "?" between the two
   // remaining team colours, then goes quiet (neutral). All timers via later()
