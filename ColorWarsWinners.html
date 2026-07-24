@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Color Wars &mdash; Final Standings</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+:root{
+  --bg-page:#0b0f17;
+  --bg-card:#121820;
+  --bg-code:#0d1219;
+  --border:#1e2d42;
+  --border-subtle:#182030;
+  --cyan:#00c8e6;
+  --cyan-dim:#2596b3;
+  --cyan-glow:rgba(0,200,230,0.12);
+  --text-primary:#dde4ef;
+  --text-secondary:#7a90aa;
+  --text-muted:#7488a1;
+  --accent-yellow:#f5a623;
+  --team-red:#f26a6a;
+  --team-blue:#5aa2ff;
+  --team-green:#34d17f;
+  --team-yellow:#f5c518;
+  --medal-gold:#f5c518;
+  --medal-silver:#c8ccd6;
+  --medal-bronze:#c97a3a;
+  --radius:10px;
+  --sans:'Poppins',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;background:#05070c;color-scheme:dark}
+body{background:#05070c;color:var(--text-primary);font:400 16px/1.4 var(--sans);
+  -webkit-font-smoothing:antialiased;height:100vh;overflow:hidden}
+
+/* Fixed 1920x1080 design surface, scaled to fit the projector viewport.
+   Everything inside is laid out in fixed px in this coordinate space. */
+#stage{position:fixed;inset:0;overflow:hidden;background:#05070c;}
+#frame{position:absolute;left:50%;top:50%;width:1920px;height:1080px;
+  transform-origin:center center;
+  transform:translate(-50%,-50%) scale(1);
+  background:radial-gradient(ellipse 70% 55% at 50% 42%,rgba(0,200,230,0.06),transparent 70%),#05070c;
+  overflow:hidden;}
+
+/* ============================================================
+   SHARED FLAG ENGINE (adapted from ColorWars.html)
+   ============================================================ */
+@keyframes flagRipple{
+  0%,100%{transform:translateY(calc(var(--amp,0)*1px)) skewY(calc(var(--sk,0)*1deg));}
+  50%{transform:translateY(calc(var(--amp,0)*-1px)) skewY(calc(var(--sk,0)*-1deg));}
+}
+@keyframes flagSheen{
+  0%{transform:translateX(var(--sx0,-6px));opacity:0;}
+  30%{opacity:.9;}70%{opacity:.9;}
+  100%{transform:translateX(var(--sx1,60px));opacity:0;}
+}
+@keyframes flagSnap{
+  0%{transform:skewX(0deg) scaleX(1);}
+  6%{transform:skewX(-16deg) scaleX(1.06);}
+  14%{transform:skewX(11deg) scaleX(.965);}
+  22%{transform:skewX(-6deg) scaleX(1.02);}
+  30%{transform:skewX(3deg) scaleX(.99);}
+  38%{transform:skewX(-1.5deg) scaleX(1.005);}
+  46%,100%{transform:skewX(0deg) scaleX(1);}
+}
+@keyframes flagGlow{
+  0%,46%,100%{filter:drop-shadow(0 0 2px var(--gc));}
+  6%{filter:drop-shadow(0 0 14px var(--gc)) drop-shadow(0 0 6px var(--gc));}
+  20%{filter:drop-shadow(0 0 6px var(--gc));}
+}
+.flag-band{transform-box:fill-box;transform-origin:center;animation:flagRipple 2.4s ease-in-out infinite;animation-delay:var(--d,0s);}
+.flag-sheen{animation:flagSheen 3.4s linear infinite;mix-blend-mode:screen;}
+.flag-outline{fill:none;stroke:var(--text-primary);stroke-linejoin:round;}
+.pole{stroke:var(--text-primary);stroke-linecap:round;}
+
+/* ============================================================
+   HERO  (idle title -> docked header strip)
+   ============================================================ */
+.hero{position:absolute;left:960px;top:540px;z-index:50;
+  display:flex;flex-direction:column;align-items:center;gap:34px;
+  transform:translate(-50%,-50%) scale(1);transform-origin:center center;
+  transition:transform 1.1s cubic-bezier(.16,.9,.3,1.05), opacity .6s ease;}
+.hero.docked{transform:translate(-50%,0) scale(.30);top:14px;transform-origin:top center;}
+.hero.gone{opacity:0;pointer-events:none;}
+.hero-title{font-weight:800;line-height:.9;letter-spacing:-.01em;text-align:center;font-size:188px;
+  background:linear-gradient(96deg,var(--team-red) 0%,var(--team-yellow) 34%,var(--team-green) 66%,var(--team-blue) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 6px 34px rgba(0,0,0,.55));}
+.hero-sub{font-weight:800;letter-spacing:.34em;text-transform:uppercase;color:var(--cyan);font-size:50px;
+  animation:heroPulse 3.4s ease-in-out infinite;}
+.hero.docked .hero-sub{opacity:0;transition:opacity .4s;}
+.hero-flags{display:flex;gap:46px;align-items:flex-end;}
+.mini-flag{width:118px;height:auto;}
+.mini-flag .cloth-g{animation:flagSnap 2.6s cubic-bezier(.16,.9,.3,1.4) infinite, flagGlow 2.6s ease-out infinite;}
+.mini-flag:nth-child(1) .cloth-g{animation-delay:0s;}
+.mini-flag:nth-child(2) .cloth-g{animation-delay:.32s;}
+.mini-flag:nth-child(3) .cloth-g{animation-delay:.64s;}
+.mini-flag:nth-child(4) .cloth-g{animation-delay:.96s;}
+@keyframes heroPulse{0%,100%{opacity:.55;}50%{opacity:1;}}
+
+/* ============================================================
+   PANELS  (centered row, low-middle band y480..950)
+   ============================================================ */
+.panels{position:absolute;inset:0;z-index:20;pointer-events:none;}
+.panel{position:absolute;top:480px;width:320px;height:470px;left:960px;
+  --flagclip:polygon(0% 0%, 100% 0%, 88% 50%, 100% 100%, 0% 100%);
+  transform:translate(-50%, var(--dy,760px)) scale(var(--s,1));
+  transition:transform .8s cubic-bezier(.16,.9,.3,1.05), opacity .55s ease, left .7s cubic-bezier(.16,.9,.3,1.05);}
+/* panel-box is now a bare positioning container; the flag silhouette lives on
+   the flood + sealed layers (poleless swallow-tail, same geometry as the flags).
+   The drop-shadow follows the clipped alpha shape and gives the cloth depth + edge. */
+.panel-box{position:absolute;inset:0;filter:drop-shadow(0 18px 34px rgba(0,0,0,.6)) drop-shadow(0 0 2px var(--border));}
+.panel-box.breathe{animation:breathe 1.7s ease-in-out infinite;}
+@keyframes breathe{0%,100%{transform:scale(1);}50%{transform:scale(1.045);}}
+
+.panel-flood{position:absolute;inset:0;z-index:1;display:flex;overflow:hidden;clip-path:var(--flagclip);}
+.pband{flex:1;transform:scaleX(0);transform-origin:left center;position:relative;}
+.pband-inner{position:absolute;left:0;top:-15%;width:100%;height:130%;background:var(--reveal,#fff);}
+.panel.revealing .pband{animation:pbandFlood .55s cubic-bezier(.2,.8,.3,1) forwards;animation-delay:calc(var(--i) * .04s);}
+.panel.revealing .pband-inner{animation:flagRipple 2.6s ease-in-out infinite;animation-delay:calc(var(--i) * .09s);}
+@keyframes pbandFlood{to{transform:scaleX(1);}}
+.panel.exploding .pband{transform:scaleX(1);animation:pbandExplode .85s ease-in forwards;}
+@keyframes pbandExplode{
+  0%{transform:scaleX(1) translate(0,0) rotate(0deg);opacity:1;}
+  100%{transform:translate(var(--ex,0),var(--ey,0)) rotate(var(--er,0deg)) scale(.5);opacity:0;}
+}
+
+.panel-sealed{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(160deg,#1a2230,#0f141c);clip-path:var(--flagclip);}
+.panel.revealing .panel-sealed,.panel.exploding .panel-sealed{animation:sealedOut .4s ease forwards;}
+@keyframes sealedOut{to{opacity:0;transform:scale(1.08);}}
+.qmark{font-weight:800;line-height:1;color:var(--text-secondary);font-size:190px;text-shadow:0 4px 20px rgba(0,0,0,.5);}
+
+.panel-label{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;padding:16px;text-align:center;}
+.chip{opacity:0;font-weight:800;letter-spacing:.12em;text-transform:uppercase;font-size:26px;
+  color:#05070c;padding:6px 20px;border-radius:999px;}
+.chip.bronze{background:var(--medal-bronze);}
+.chip.silver{background:var(--medal-silver);}
+/* once the flood lands the panel is solid team colour, so all label text is
+   dark ink (#05070c, same as the chip) for high contrast on every team colour */
+.panel-name{opacity:0;font-weight:800;line-height:1;letter-spacing:-.01em;text-transform:uppercase;
+  color:#05070c;font-size:60px;text-shadow:0 1px 2px rgba(255,255,255,.3);}
+.panel-pts{opacity:0;font-weight:800;line-height:1;color:#05070c;font-variant-numeric:tabular-nums;font-size:60px;}
+.panel-pts .pts-lbl{font-weight:800;font-size:.36em;color:rgba(5,7,12,.72);letter-spacing:.14em;margin-left:.35em;text-transform:uppercase;}
+.panel-ribbon{opacity:0;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
+  color:#05070c;font-size:48px;max-width:9ch;line-height:1.08;}
+.panel.revealing .chip{animation:labelIn .5s .3s ease both;}
+.panel.revealing .panel-name{animation:labelIn .6s .35s ease both, nameGlow 1.3s .55s ease;}
+.panel.revealing .panel-pts{animation:labelIn .5s .5s ease both;}
+.panel.revealing .panel-ribbon{animation:labelIn .5s .8s ease both;}
+@keyframes labelIn{from{opacity:0;transform:translateY(20px) scale(.92);}to{opacity:1;transform:none;}}
+@keyframes nameGlow{0%{text-shadow:0 2px 22px rgba(0,0,0,.6);}
+  35%{text-shadow:0 0 46px var(--reveal),0 0 20px var(--reveal),0 2px 22px rgba(0,0,0,.6);}
+  100%{text-shadow:0 2px 22px rgba(0,0,0,.6);}}
+.pts-num.flash{animation:ptsFlash .7s ease;}
+@keyframes ptsFlash{0%{filter:none;}35%{filter:drop-shadow(0 0 26px #fff) drop-shadow(0 0 10px var(--reveal));}100%{filter:none;}}
+
+/* ============================================================
+   STANDINGS RAIL  (fixed left column, x48..478)
+   ============================================================ */
+.rail{position:absolute;left:48px;top:150px;z-index:25;width:430px;pointer-events:none;}
+.rail-row{position:absolute;left:0;right:0;height:120px;
+  transform:translateY(calc(var(--rank,0) * 136px));
+  transition:transform .6s cubic-bezier(.2,.8,.3,1), opacity .5s ease;
+  display:flex;flex-direction:column;gap:12px;justify-content:center;}
+.rail-row.enter{opacity:0;transform:translateY(calc(var(--rank,0) * 136px)) translateX(-56px);}
+.rr-head{display:flex;align-items:baseline;gap:16px;}
+.rr-name{font-weight:800;text-transform:uppercase;color:#fff;font-size:42px;line-height:1;}
+.rr-rank{font-weight:800;color:var(--cyan);font-size:24px;letter-spacing:.08em;text-transform:uppercase;margin-right:auto;}
+.rr-pts{font-weight:800;color:#fff;font-variant-numeric:tabular-nums;font-size:38px;line-height:1;}
+.rr-track{position:relative;height:30px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;border:1px solid var(--border-subtle);}
+.rr-bar{position:absolute;left:0;top:0;height:100%;border-radius:999px;width:0;background:var(--rc,#fff);transition:width .9s cubic-bezier(.2,.8,.3,1);}
+.rr-sheen{position:absolute;top:0;left:0;height:100%;width:40%;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);transform:translateX(-140%);mix-blend-mode:screen;}
+.rr-sheen.sweep{animation:railSheen 1.1s ease;}
+.rail-row.champ .rr-sheen{animation:railSheen 2.6s ease 1s infinite;}
+@keyframes railSheen{0%{transform:translateX(-140%);}100%{transform:translateX(360%);}}
+
+/* ============================================================
+   CENTER OVERLAY  (countdown / rank stamps / gap title)
+   Reveal band lives above the panels (y<=440) or in the far top.
+   ============================================================ */
+.center{position:absolute;inset:0;z-index:60;pointer-events:none;}
+.stamp{position:absolute;top:230px;left:960px;color:#fff;font-weight:800;line-height:.9;
+  text-transform:uppercase;text-align:center;white-space:nowrap;font-size:150px;text-shadow:0 6px 40px rgba(0,0,0,.65);
+  transform:translateX(-50%) scale(.3);animation:stampIn .7s cubic-bezier(.16,.9,.3,1.4) both;}
+@keyframes stampIn{0%{transform:translateX(-50%) scale(.3);opacity:0;}
+  14%{opacity:1;}62%{transform:translateX(-50%) scale(1.12);}100%{transform:translateX(-50%) scale(1);opacity:1;}}
+.cdlead{position:absolute;top:305px;left:960px;transform:translateX(-50%);color:#fff;font-weight:800;
+  text-transform:uppercase;text-align:center;line-height:1.02;font-size:112px;opacity:0;animation:leadIn .5s ease forwards;}
+@keyframes leadIn{to{opacity:1;}}
+.cdnum{position:absolute;top:350px;left:960px;color:#fff;font-weight:800;line-height:1;font-size:220px;
+  text-shadow:0 8px 50px rgba(0,0,0,.6);transform:translate(-50%,-50%) scale(2.6);animation:cdPop .9s cubic-bezier(.16,.9,.3,1.4) both;}
+.cdnum.cyan{color:var(--cyan);text-shadow:0 0 60px var(--cyan-glow),0 8px 50px rgba(0,0,0,.6);}
+@keyframes cdPop{0%{transform:translate(-50%,-50%) scale(2.6);opacity:0;}
+  20%{opacity:1;}70%{transform:translate(-50%,-50%) scale(.9);}100%{transform:translate(-50%,-50%) scale(1);opacity:1;}}
+.gaptitle{position:absolute;top:150px;left:960px;transform:translateX(-50%);color:var(--cyan);font-weight:800;
+  text-transform:uppercase;letter-spacing:.2em;text-align:center;white-space:nowrap;font-size:72px;
+  text-shadow:0 0 40px var(--cyan-glow);opacity:0;animation:leadIn .8s ease forwards;}
+
+/* champion end-state text (separated: stamp top, name below flag, pts below name) */
+.champ-stamp{position:absolute;top:18px;left:960px;transform:translateX(-50%) scale(.3);color:#fff;font-weight:800;
+  text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;font-size:88px;line-height:1;text-shadow:0 6px 44px rgba(0,0,0,.75);
+  animation:stampIn .7s cubic-bezier(.16,.9,.3,1.4) both;}
+.champ-name{position:absolute;top:735px;left:960px;transform:translateX(-50%) scale(.4);color:#fff;font-weight:800;
+  text-transform:uppercase;letter-spacing:-.01em;line-height:.9;text-align:center;white-space:nowrap;font-size:118px;
+  text-shadow:0 0 60px rgba(0,0,0,.9),0 0 30px rgba(0,0,0,.95);
+  opacity:0;animation:champNameIn .8s cubic-bezier(.16,.9,.3,1.4) both, champTripleGlow 2.2s .6s ease;}
+@keyframes champNameIn{0%{opacity:0;transform:translateX(-50%) scale(.4);}
+  60%{opacity:1;transform:translateX(-50%) scale(1.08);}100%{opacity:1;transform:translateX(-50%) scale(1);}}
+@keyframes champTripleGlow{
+  0%{text-shadow:0 0 0 var(--champ),0 0 60px rgba(0,0,0,.9);}
+  15%,45%,75%{text-shadow:0 0 60px var(--champ),0 0 26px var(--champ),0 0 60px rgba(0,0,0,.9);}
+  30%,60%,100%{text-shadow:0 0 10px var(--champ),0 0 60px rgba(0,0,0,.9);}}
+.champ-pts{position:absolute;top:878px;left:960px;transform:translateX(-50%);color:#fff;font-weight:800;
+  font-variant-numeric:tabular-nums;font-size:60px;opacity:0;text-shadow:0 0 40px rgba(0,0,0,.8);animation:leadIn .5s .2s ease forwards;}
+.champ-pts .pts-lbl{font-weight:800;font-size:.38em;color:var(--cyan);letter-spacing:.16em;margin-left:.35em;text-transform:uppercase;}
+.champ-pts .pts-num.gflash{animation:goldFlash .8s ease;}
+@keyframes goldFlash{0%{filter:none;}35%{filter:drop-shadow(0 0 34px #fff) drop-shadow(0 0 16px var(--medal-gold));}100%{filter:none;}}
+
+/* runner-up "2ND PLACE" stamp, anchored over the runner-up panel during the
+   combined climax so the silver reveal is never mistaken for the champion */
+.run-stamp{position:absolute;top:392px;left:1560px;transform:translateX(-50%) scale(.3);color:var(--medal-silver);
+  font-weight:800;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;font-size:64px;line-height:1;
+  text-shadow:0 4px 24px rgba(0,0,0,.7);animation:stampIn .6s cubic-bezier(.16,.9,.3,1.4) both;transition:opacity .5s ease;}
+.run-stamp.out{opacity:0;}
+
+/* ============================================================
+   GIANT CHAMPION FLAG  (center, x795..1125 approx, y150..710)
+   ============================================================ */
+.champ-flag{position:absolute;left:960px;top:150px;height:560px;z-index:30;
+  transform:translate(-50%,0) translateX(-2400px);opacity:0;
+  transition:transform .95s cubic-bezier(.16,.9,.3,1.4), opacity .5s ease;}
+.champ-flag.in{transform:translate(-50%,0) translateX(0);opacity:1;}
+.champ-flag .flag-svg{height:100%;width:auto;}
+.champ-flag .cloth-g{animation:flagSnap 3.4s cubic-bezier(.16,.9,.3,1.4) infinite, flagGlow 3.4s ease-out infinite;}
+
+/* ============================================================
+   CONFETTI + FLASH  (frame-space coordinates)
+   ============================================================ */
+.confetti{position:absolute;inset:0;z-index:40;pointer-events:none;overflow:hidden;}
+.burst-piece,.fall-piece{position:absolute;border-radius:2px;will-change:transform,opacity;}
+@keyframes s10Confetti{
+  0%{transform:translate(0,0) rotate(0deg) scale(.4);opacity:0;}
+  15%{opacity:1;}70%{opacity:1;}
+  100%{transform:translate(var(--dx),var(--dy)) rotate(220deg) scale(1);opacity:0;}}
+@keyframes confettiFall{
+  0%{transform:translate(0,-140px) rotate(0deg);opacity:0;}
+  8%{opacity:1;}90%{opacity:1;}
+  100%{transform:translate(var(--drift,0),1220px) rotate(var(--rot,360deg));opacity:0;}}
+.flash{position:absolute;inset:0;z-index:900;background:#fff;opacity:0;pointer-events:none;}
+
+/* footer + operator hint */
+.footer{position:absolute;left:0;right:0;top:996px;z-index:70;text-align:center;color:var(--cyan);
+  font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-size:48px;text-shadow:0 0 34px var(--cyan-glow);
+  opacity:0;transition:opacity 1s ease;}
+.footer.show{opacity:1;animation:heroPulse 4s ease-in-out 1s infinite;}
+/* tiny operator-only reminder, near-invisible from a distance, purely for whoever holds the keyboard */
+.ophint{position:absolute;right:16px;bottom:12px;z-index:80;color:var(--text-muted);font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;font-size:15px;opacity:.25;}
+
+/* live-score loading / error overlay (must be readable from the projector) */
+.statusmsg{position:absolute;left:960px;top:540px;transform:translate(-50%,-50%);z-index:850;
+  width:1500px;text-align:center;display:none;}
+.statusmsg.show{display:block;}
+.statusmsg .sm-title{font-weight:800;text-transform:uppercase;letter-spacing:.03em;line-height:1.05;
+  font-size:104px;color:var(--team-red);text-shadow:0 6px 40px rgba(0,0,0,.6);}
+.statusmsg .sm-sub{margin-top:26px;font-weight:600;font-size:46px;line-height:1.25;color:var(--text-primary);}
+.statusmsg.loading{top:852px;}
+.statusmsg.loading .sm-title{color:var(--cyan);font-size:58px;letter-spacing:.14em;}
+.statusmsg.loading .sm-sub{color:var(--text-secondary);font-size:30px;margin-top:16px;}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
+}
+@media (forced-colors:active){
+  .panel-box,.rr-track,.rail-row{border:1px solid ButtonText;}
+}
+</style>
+</head>
+<body>
+<div id="stage">
+<div id="frame">
+  <div class="confetti" id="confetti" aria-hidden="true"></div>
+  <div class="rail" id="rail" aria-hidden="true"></div>
+  <div class="panels" id="panels" aria-hidden="true"></div>
+  <div class="champ-flag" id="champFlag" aria-hidden="true"></div>
+
+  <div class="hero" id="hero">
+    <div class="hero-title">COLOR WARS</div>
+    <div class="hero-sub">Final Standings</div>
+    <div class="hero-flags" id="heroFlags" aria-hidden="true"></div>
+  </div>
+
+  <div class="center" id="center" aria-hidden="true"></div>
+  <div class="footer" id="footer">Well done, good and faithful servants</div>
+  <div class="flash" id="flash" aria-hidden="true"></div>
+  <div class="statusmsg" id="statusmsg" aria-live="polite"></div>
+  <div class="ophint" id="ophint">Space: begin / skip &nbsp;&middot;&nbsp; R: restart</div>
+</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ==== LIVE SCORE SOURCE =============================================
+     Normal path: point totals are fetched live on page load from the
+     published CSV of the "Color Wars Scoresheet" Google Sheet (the row
+     per color team, its TOTAL column). Nothing to edit here on event day
+     - enter scores in the Sheet and (re)load / press R on this page.
+     The parser locates the "Team" and "TOTAL" header columns by name and
+     reads only the four color-team rows, so it tolerates extra columns or
+     reordering as long as each color team has a row with a TOTAL.
+  ==================================================================== */
+  var CSV_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vSjBcNFy5A2KI4buO2sz7MH4mO_MAKTVfVvvIqqNBsZr2HNerP3mscjVBRB3LpL1BsI59NIevSDMrpK/pub?output=csv';
+  var COLOR_MAP={RED:'var(--team-red)',BLUE:'var(--team-blue)',GREEN:'var(--team-green)',YELLOW:'var(--team-yellow)'};
+
+  /* FALLBACK / DEMO DATA ONLY - NOT used on the normal live-fetch path.
+     Kept so the reveal can still be hand-run offline: to bypass the live
+     fetch, change bootstrap() to buildScene() at the bottom of this IIFE
+     and edit these totals by hand. Live-fetched data overwrites this. */
+  var TEAMS=[
+    {name:'RED',    color:'var(--team-red)',    points:340},
+    {name:'BLUE',   color:'var(--team-blue)',   points:265},
+    {name:'GREEN',  color:'var(--team-green)',  points:410},
+    {name:'YELLOW', color:'var(--team-yellow)', points:295}
+  ];
+
+  /* ---- element refs ---- */
+  var stage=document.getElementById('stage');
+  var frame=document.getElementById('frame');
+  var hero=document.getElementById('hero');
+  var heroFlags=document.getElementById('heroFlags');
+  var panelsWrap=document.getElementById('panels');
+  var railWrap=document.getElementById('rail');
+  var center=document.getElementById('center');
+  var champFlag=document.getElementById('champFlag');
+  var confetti=document.getElementById('confetti');
+  var footer=document.getElementById('footer');
+  var flash=document.getElementById('flash');
+  var statusMsg=document.getElementById('statusmsg');
+
+  /* ---- layout constants (fixed 1920x1080 space) ---- */
+  var PANEL_TOP=480, PANEL_H=470, PANEL_W=320;
+  var SLOT_X=[390,770,1150,1530];           // initial 4-across centers
+  var CENTER_X=960;
+
+  var sorted=[], revealOrder=[], maxPoints=1, panelMap={}, docked=[];
+  // during the combined climax both surviving panels are positioned by hand
+  // (champion detonates centre, runner-up parks right); the generic auto-recenter
+  // must stand down so it can't yank the lone runner-up back to screen centre on
+  // top of the giant champion name
+  var climaxActive=false;
+
+  /* ---- timers / raf ---- */
+  var subTimers=[], rafId=null, stormInterval=null;
+  function later(fn,ms){var id=setTimeout(fn,ms);subTimers.push(id);return id;}
+  function clearSubs(){
+    subTimers.forEach(clearTimeout);subTimers=[];
+    if(rafId){cancelAnimationFrame(rafId);rafId=null;}
+  }
+
+  /* ==== FIT FRAME TO VIEWPORT (keeps the fixed 1920x1080 layout intact) ==== */
+  function fitFrame(){
+    var s=Math.min(window.innerWidth/1920, window.innerHeight/1080);
+    frame.style.transform='translate(-50%,-50%) scale('+s+')';
+  }
+  window.addEventListener('resize', fitFrame);
+
+  /* ==== FLAG SVG BUILDER (ripple-band + snap + sheen engine) ==== */
+  function flagSVG(color, id, o){
+    o=o||{};
+    var W=o.W||38, H=o.H||28, n=o.n||6;
+    var maxAmp=o.maxAmp||5.7, maxSk=o.maxSk||3.4;
+    var notch=(o.notch!=null)?o.notch:W*0.2;
+    var poleX=o.poleX||14, top=o.top||12, poleUp=o.poleUp||6, poleDown=o.poleDown||50;
+    var stagger=o.stagger||0.13, poleW=o.poleW||4, outW=o.outlineW||2.6;
+    var padR=o.padR||8, padB=o.padB||6;
+    var vbW=poleX+W+padR, vbH=top+H+poleDown+padB;
+    var cloth='M0 0 L'+W+' 0 L'+(W-notch)+' '+(H/2)+' L'+W+' '+H+' L0 '+H+' Z';
+    var bandW=W/n, yTop=(-H*0.14), bandH=(H*1.28), bands='';
+    for(var i=0;i<n;i++){
+      var amp=(0.6+(maxAmp-0.6)*(i/(n-1))).toFixed(2);
+      var sk =(0.4+(maxSk -0.4)*(i/(n-1))).toFixed(2);
+      var d  =(-i*stagger - (o.baseDelay||0)).toFixed(2);
+      var x  =(i*bandW).toFixed(2);
+      var w  =(bandW + (i<n-1?0.8:0)).toFixed(2);
+      bands+='<rect class="flag-band" x="'+x+'" y="'+yTop.toFixed(2)+'" width="'+w+'" height="'+bandH.toFixed(2)+'" fill="'+color+'" style="--amp:'+amp+';--sk:'+sk+';--d:'+d+'s"/>';
+    }
+    var sheenX=(-W*0.1), sheenW=(W*0.28);
+    return '<svg class="flag-svg" viewBox="0 0 '+vbW.toFixed(1)+' '+vbH.toFixed(1)+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">'
+      +'<defs><linearGradient id="sh'+id+'" x1="0" y1="0" x2="1" y2="0">'
+      +'<stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".4"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>'
+      +'</linearGradient><clipPath id="cl'+id+'"><path d="'+cloth+'"/></clipPath></defs>'
+      +'<line class="pole" x1="'+poleX+'" y1="'+(top-poleUp)+'" x2="'+poleX+'" y2="'+(top+H+poleDown)+'" stroke-width="'+poleW+'"/>'
+      +'<g transform="translate('+poleX+','+top+')"><g class="cloth-g" style="transform-origin:0px 0px;--gc:'+color+';">'
+      +'<g clip-path="url(#cl'+id+')">'+bands
+      +'<rect class="flag-sheen" x="'+sheenX.toFixed(2)+'" y="'+yTop.toFixed(2)+'" width="'+sheenW.toFixed(2)+'" height="'+bandH.toFixed(2)+'" fill="url(#sh'+id+')" style="--sx0:'+sheenX.toFixed(1)+'px;--sx1:'+(W*1.05).toFixed(1)+'px"/>'
+      +'</g><path class="flag-outline" d="'+cloth+'" stroke-width="'+outW+'"/></g></g></svg>';
+  }
+
+  /* ==== BUILD / RESET SCENE ==== */
+  function buildScene(){
+    clearSubs(); stopStorm();
+
+    sorted=TEAMS.slice().sort(function(a,b){return b.points-a.points;});
+    sorted.forEach(function(t,i){t.rank=i;});           // 0=champion ... 3=last
+    revealOrder=[sorted[3],sorted[2],sorted[1],sorted[0]];
+    maxPoints=Math.max(1,sorted[0].points);
+
+    heroFlags.innerHTML='';
+    TEAMS.forEach(function(t,i){
+      var w=document.createElement('div'); w.className='mini-flag';
+      w.innerHTML=flagSVG(t.color,'H'+i,{W:38,H:28,n:6,maxAmp:5.7,maxSk:3.4,poleX:14,top:12,poleUp:6,poleDown:50,poleW:4,outlineW:2.6,baseDelay:i*0.32});
+      heroFlags.appendChild(w);
+    });
+
+    panelsWrap.innerHTML=''; panelMap={};
+    TEAMS.forEach(function(t,i){
+      var p=document.createElement('div'); p.className='panel';
+      p.style.setProperty('--reveal',t.color);
+      p.style.left=SLOT_X[i]+'px';
+      p.style.setProperty('--dy','760px');
+      var flood='';
+      for(var b=0;b<12;b++){flood+='<div class="pband" style="--i:'+b+'"><div class="pband-inner"></div></div>';}
+      p.innerHTML='<div class="panel-box">'
+        +'<div class="panel-flood">'+flood+'</div>'
+        +'<div class="panel-sealed"><span class="qmark">?</span></div>'
+        +'<div class="panel-label"><div class="chip"></div><div class="panel-name">'+t.name+'</div>'
+        +'<div class="panel-pts"><span class="pts-num">0</span><span class="pts-lbl">pts</span></div>'
+        +'<div class="panel-ribbon"></div></div></div>';
+      panelsWrap.appendChild(p);
+      panelMap[t.name]={team:t, el:p, box:p.querySelector('.panel-box'),
+        chip:p.querySelector('.chip'), name:p.querySelector('.panel-name'),
+        pts:p.querySelector('.panel-pts .pts-num'), ribbon:p.querySelector('.panel-ribbon'),
+        slotX:SLOT_X[i], committed:false, revealed:false};
+    });
+
+    champFlag.className='champ-flag';
+    champFlag.innerHTML=flagSVG(sorted[0].color,'GIANT',{
+      W:360,H:300,n:10,maxAmp:20,maxSk:5,notch:64,
+      poleX:90,top:70,poleUp:34,poleDown:430,poleW:11,outlineW:6,padR:34,padB:20,stagger:0.14});
+
+    railWrap.innerHTML=''; center.innerHTML=''; confetti.innerHTML=''; docked=[]; climaxActive=false;
+    frame.style.setProperty('--champ', resolveColor(sorted[0].color));
+
+    hero.classList.remove('docked','gone');
+    footer.classList.remove('show');
+    fitFrame();
+  }
+
+  function resolveColor(cssVar){
+    var m=/var\((--[a-z0-9-]+)\)/i.exec(cssVar);
+    if(!m) return cssVar;
+    return getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim()||cssVar;
+  }
+
+  /* ==== LIVE SCORE LOAD (fetch published CSV -> populate TEAMS) ==== */
+  var ready=false;
+  function showStatus(kind,title,sub){
+    statusMsg.className='statusmsg show'+(kind?' '+kind:'');
+    statusMsg.innerHTML='<div class="sm-title"></div><div class="sm-sub"></div>';
+    statusMsg.querySelector('.sm-title').textContent=title;
+    statusMsg.querySelector('.sm-sub').textContent=sub||'';
+  }
+  function hideStatus(){ statusMsg.className='statusmsg'; statusMsg.innerHTML=''; }
+  // Locate the Team/TOTAL header columns by name and read the four colour-team
+  // rows. Team names + integer totals never contain commas, so a plain split is
+  // safe for those rows; other rows (title/notes/squads) are simply skipped.
+  function parseScoresCSV(text){
+    var lines=text.split(/\r?\n/).filter(function(l){return l.trim().length;});
+    var headerIdx=-1, cols=null;
+    for(var i=0;i<lines.length;i++){
+      var c=lines[i].split(',');
+      if((c[0]||'').trim().toLowerCase()==='team'){ headerIdx=i; cols=c; break; }
+    }
+    if(headerIdx<0) throw new Error('scoresheet header (Team,...) not found');
+    var totalIdx=-1;
+    for(var j=0;j<cols.length;j++){ if((cols[j]||'').trim().toUpperCase()==='TOTAL'){ totalIdx=j; break; } }
+    if(totalIdx<0) throw new Error('TOTAL column not found');
+    var scores={};
+    for(var k=headerIdx+1;k<lines.length;k++){
+      var r=lines[k].split(',');
+      var nm=(r[0]||'').trim().toUpperCase();
+      if(!COLOR_MAP[nm] || scores[nm]!=null) continue;
+      var pts=parseInt((r[totalIdx]||'').trim(),10);
+      if(isNaN(pts)) throw new Error('non-numeric TOTAL for '+nm);
+      scores[nm]=pts;
+    }
+    if(Object.keys(scores).length!==4) throw new Error('expected 4 team rows, found '+Object.keys(scores).length);
+    return ['RED','BLUE','GREEN','YELLOW'].map(function(n){return {name:n,color:COLOR_MAP[n],points:scores[n]};});
+  }
+  function loadScores(){
+    var ctrl=new AbortController();
+    var to=setTimeout(function(){ ctrl.abort(); }, 7000);
+    // always hit the original pub?output=csv (never the rotating signed redirect
+    // target); cache-bust so a reload/R gets fresh scores, never a stale copy
+    var url=CSV_URL+(CSV_URL.indexOf('?')>-1?'&':'?')+'_cb='+Date.now();
+    return fetch(url,{cache:'no-store',signal:ctrl.signal})
+      .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
+      .then(function(t){ clearTimeout(to); return parseScoresCSV(t); },
+            function(e){ clearTimeout(to); throw (e && e.name==='AbortError') ? new Error('request timed out') : e; });
+  }
+  function bootstrap(){
+    ready=false;
+    hero.classList.remove('gone');
+    showStatus('loading','Loading live scores','Fetching results from the scoresheet');
+    loadScores().then(function(teams){
+      TEAMS=teams;
+      buildScene();
+      hideStatus();
+      ready=true;
+    }, function(){
+      hero.classList.add('gone');
+      showStatus('error','Could not load scores','Check the internet connection, then press R to try again.');
+    });
+  }
+
+  /* ==== FREEZE / FLASH ==== */
+  var freezeCSSAttached=false;
+  function attachFreezeCSS(){
+    if(freezeCSSAttached) return;
+    var s=document.createElement('style');
+    // note: .panel-box.breathe is intentionally NOT frozen — the held-breath pulse
+    // during the final-two beat is deliberate motion that fills the silence
+    s.textContent='#stage.frozen .flag-band,#stage.frozen .cloth-g,#stage.frozen .flag-sheen,'
+      +'#stage.frozen .pband,#stage.frozen .pband-inner{animation-play-state:paused !important;}';
+    document.head.appendChild(s); freezeCSSAttached=true;
+  }
+  function freeze(){ attachFreezeCSS(); stage.classList.add('frozen'); }
+  function unfreeze(){ stage.classList.remove('frozen'); }
+  function flashOnce(peak){
+    flash.style.transition='none'; flash.style.opacity=String(peak);
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){
+      flash.style.transition='opacity .38s ease'; flash.style.opacity='0';
+    });});
+  }
+
+  /* ==== ODOMETER (decelerating, uneven integer steps) ==== */
+  function odometer(el, to, dur, onDone){
+    var start=null;
+    function frame_(now){
+      if(start===null) start=now;
+      var t=Math.min(1,(now-start)/dur), e=1-Math.pow(1-t,3);
+      el.textContent=String(Math.round(to*e));
+      if(t<1){ rafId=requestAnimationFrame(frame_); }
+      else{ el.textContent=String(to); rafId=null; if(onDone) onDone(); }
+    }
+    rafId=requestAnimationFrame(frame_);
+  }
+
+  /* ==== CONFETTI (frame-space) ==== */
+  var CONF=['var(--team-red)','var(--team-blue)','var(--team-green)','var(--team-yellow)'];
+  function confettiBurst(cx,cy,count){
+    for(var i=0;i<count;i++){
+      var d=document.createElement('div'); d.className='burst-piece';
+      var sz=10+Math.random()*16;
+      d.style.left=cx+'px'; d.style.top=cy+'px';
+      d.style.width=sz+'px'; d.style.height=(sz*0.6)+'px';
+      d.style.background=CONF[(Math.random()*CONF.length)|0];
+      var ang=Math.random()*Math.PI*2, dist=140+Math.random()*300;
+      d.style.setProperty('--dx',(Math.cos(ang)*dist).toFixed(0)+'px');
+      d.style.setProperty('--dy',(Math.sin(ang)*dist - 50).toFixed(0)+'px');
+      var dur=2.2+Math.random()*1.2;
+      d.style.animation='s10Confetti '+dur.toFixed(2)+'s ease-out forwards';
+      d.style.animationDelay=(Math.random()*0.25).toFixed(2)+'s';
+      confetti.appendChild(d);
+      (function(node,ms){ later(function(){ if(node.parentNode) node.parentNode.removeChild(node); }, ms); })(d,(dur+0.5)*1000);
+    }
+  }
+  function spawnFallPiece(){
+    var d=document.createElement('div'); d.className='fall-piece';
+    var sz=10+Math.random()*18;
+    d.style.left=(Math.random()*1920)+'px'; d.style.top='0px';
+    d.style.width=sz+'px'; d.style.height=(sz*0.6)+'px';
+    d.style.background=CONF[(Math.random()*CONF.length)|0];
+    var dur=3+Math.random()*3.4;
+    d.style.setProperty('--drift',((Math.random()*2-1)*220).toFixed(0)+'px');
+    d.style.setProperty('--rot',(Math.random()*760-380).toFixed(0)+'deg');
+    d.style.animation='confettiFall '+dur.toFixed(2)+'s linear forwards';
+    d.style.animationDelay=(Math.random()*0.5).toFixed(2)+'s';
+    confetti.appendChild(d);
+    var node=d;
+    setTimeout(function(){ if(node.parentNode) node.parentNode.removeChild(node); }, (dur+1)*1000);
+  }
+  function startStorm(){
+    stopStorm();
+    stormInterval=setInterval(function(){
+      var k=2+((Math.random()*2)|0);
+      for(var i=0;i<k;i++) spawnFallPiece();
+    }, 270);
+  }
+  function stopStorm(){ if(stormInterval){ clearInterval(stormInterval); stormInterval=null; } }
+
+  /* ==== RAIL ==== */
+  function rankPct(pts){ return Math.max(6, Math.round(pts/maxPoints*100)); }
+  function ordinal(n){ return n+({1:'ST',2:'ND',3:'RD'}[n]||'TH'); }
+  function dockTeam(team, isChamp){
+    var row=document.createElement('div');
+    row.className='rail-row enter'+(isChamp?' champ':'');
+    row.dataset.name=team.name;
+    row.innerHTML='<div class="rr-head"><span class="rr-name">'+team.name+'</span>'
+      +'<span class="rr-rank">'+ordinal(team.rank+1)+'</span><span class="rr-pts">'+team.points+'</span></div>'
+      +'<div class="rr-track"><div class="rr-bar" style="--rc:'+team.color+';"></div><div class="rr-sheen"></div></div>';
+    railWrap.appendChild(row);
+    docked.push(team); reRankRail();
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){
+      row.classList.remove('enter');
+      row.querySelector('.rr-bar').style.width=rankPct(team.points)+'%';
+      if(!isChamp) row.querySelector('.rr-sheen').classList.add('sweep');
+    });});
+  }
+  function reRankRail(){
+    docked.slice().sort(function(a,b){return b.points-a.points;}).forEach(function(t,i){
+      var row=railWrap.querySelector('.rail-row[data-name="'+t.name+'"]');
+      if(row) row.style.setProperty('--rank', i);
+    });
+  }
+
+  /* ==== PANEL POSITIONING (keeps remaining panels centred, clear of the left rail) ==== */
+  function movePanel(rec, leftPx, dy, s){
+    if(leftPx!=null) rec.el.style.left=leftPx+'px';
+    if(dy!=null) rec.el.style.setProperty('--dy',dy+'px');
+    if(s!=null) rec.el.style.setProperty('--s',String(s));
+  }
+  function remainingRecs(){
+    return revealOrder.filter(function(t){return !panelMap[t.name].committed;})
+                      .map(function(t){return panelMap[t.name];});
+  }
+  function recenterRemaining(){
+    if(climaxActive) return;
+    var rem=remainingRecs();
+    var layouts={1:[960],2:[740,1180],3:[570,960,1350],4:SLOT_X};
+    var xs=layouts[rem.length]||SLOT_X;
+    // keep visual left-to-right order stable by current left
+    rem.sort(function(a,b){return parseFloat(a.el.style.left)-parseFloat(b.el.style.left);});
+    rem.forEach(function(rec,i){ movePanel(rec, xs[i], 0, null); });
+  }
+
+  /* ==== IDEMPOTENT COMMIT / CATCH-UP ==== */
+  function commitTeam(team){
+    var rec=panelMap[team.name];
+    if(rec.committed) return;
+    rec.committed=true; rec.revealed=true;
+    rec.el.classList.add('revealing');
+    rec.pts.textContent=String(team.points);
+    dockTeam(team, team.rank===0);
+    // fade the panel away in place (no cross-screen travel -> no collisions)
+    rec.el.style.opacity='0'; rec.el.style.setProperty('--s','.6');
+    recenterRemaining();
+  }
+  function catchUp(k){ for(var i=0;i<k;i++) commitTeam(revealOrder[i]); }
+  function forceEndState(){
+    unfreeze();
+    hero.classList.add('gone');
+    catchUp(4);
+    champFlag.classList.add('in');
+    if(!center.querySelector('.champ-stamp')){ var s=el('champ-stamp','CHAMPIONS'); center.appendChild(s); }
+    if(!center.querySelector('.champ-name')){ var nm=el('champ-name',sorted[0].name); center.appendChild(nm); }
+    var cp=center.querySelector('.champ-pts');
+    if(!cp){
+      cp=el('champ-pts',''); cp.innerHTML='<span class="pts-num">'+sorted[0].points+'</span><span class="pts-lbl">pts</span>';
+      center.appendChild(cp);
+    } else {
+      // authoritative: guarantee the permanent state shows the real total even if
+      // the rAF count-up was interrupted
+      var pn=cp.querySelector('.pts-num'); if(pn) pn.textContent=sorted[0].points;
+    }
+    // guarantee the champion is at full glory (not left dimmed if a skip landed
+    // mid runner-up reveal) and drop any lingering runner-up stamp
+    championDim(false);
+    var rs=center.querySelector('.run-stamp'); if(rs&&rs.parentNode) rs.parentNode.removeChild(rs);
+  }
+  function el(cls,txt){ var d=document.createElement('div'); d.className=cls; if(txt) d.textContent=txt; return d; }
+
+  // Briefly recede the giant champion name/points/stamp (and restore them) so a
+  // simultaneous runner-up reveal in the combined climax does not read as
+  // competing with the champion. Clears the fill-mode animations first, because a
+  // running CSS animation with fill:both otherwise wins over these inline values.
+  function championDim(dim){
+    var nm=center.querySelector('.champ-name'), pts=center.querySelector('.champ-pts'), st=center.querySelector('.champ-stamp');
+    [nm,pts,st].forEach(function(e){ if(!e) return; e.style.animation='none'; e.style.transition='opacity .55s ease, transform .55s ease'; });
+    if(st){ st.style.transform='translateX(-50%) scale(1)'; st.style.opacity=dim?'0.24':'1'; }
+    if(pts){ pts.style.opacity=dim?'0.18':'1'; }
+    if(nm){ nm.style.transform='translateX(-50%) scale('+(dim?'.82':'1')+')'; nm.style.opacity=dim?'0.24':'1'; }
+  }
+
+  /* ==== CENTER HELPERS ==== */
+  function centerClear(){ center.innerHTML=''; }
+  function stamp(text){ var d=el('stamp',text); center.appendChild(d); flashOnce(0.55); return d; }
+  function cdNumber(txt, cyan){ centerClear(); var d=el('cdnum'+(cyan?' cyan':''),txt); center.appendChild(d); }
+
+  /* ==== REVEAL ==== */
+  function revealTeam(team, opts){
+    opts=opts||{};
+    var rec=panelMap[team.name];
+    rec.revealed=true;
+    rec.el.classList.add('revealing');
+    if(opts.chip){ rec.chip.textContent=opts.chip.text; rec.chip.className='chip '+opts.chip.cls; }
+    if(opts.ribbon){ rec.ribbon.textContent=opts.ribbon; }
+    later(function(){
+      odometer(rec.pts, team.points, opts.countDur||1500, function(){ rec.pts.classList.add('flash'); });
+    }, opts.countDelay||650);
+  }
+  function panelCenter(rec){ return {x:parseFloat(rec.el.style.left)||CENTER_X, y:PANEL_TOP+PANEL_H/2}; }
+
+  function bigReveal(rankFromTop, cfg){
+    var team=sorted[rankFromTop];
+    freeze(); centerClear();
+    later(function(){
+      unfreeze();
+      stamp(cfg.stampText);
+      revealTeam(team,{chip:cfg.chip,ribbon:cfg.ribbon,countDelay:cfg.countDelay||700,countDur:cfg.countDur||1500});
+      if(cfg.confetti){
+        later(function(){ var c=panelCenter(panelMap[team.name]); confettiBurst(c.x,c.y,cfg.confetti); }, cfg.confettiDelay||900);
+      }
+      later(function(){ commitTeam(team); }, cfg.dockDelay||4200);
+    }, 1250);
+  }
+
+  /* ==== SEQUENCE STEPS ==== */
+  function stepGather(){
+    hero.classList.add('docked');
+    TEAMS.forEach(function(t,i){
+      var rec=panelMap[t.name];
+      later(function(){ rec.el.style.setProperty('--dy','0px'); }, 500 + i*180);
+    });
+  }
+  function stepCountdownIntro(){ centerClear(); var lead=el('cdlead',''); lead.innerHTML='4 TEAMS.<br>1 CHAMPION.'; center.appendChild(lead); }
+  function stepCd3(){ cdNumber('3'); }
+  function stepCd2(){ cdNumber('2'); }
+  function stepCd1(){ cdNumber('1'); }
+
+  // dockDelay lengthened (was 4200/4600) so the settled point total holds on the
+  // big panel ~4.5s before the whole panel fades, instead of only ~2.3-2.5s
+  function stepReveal4(){ bigReveal(3,{stampText:'4TH PLACE',ribbon:'Every team ran the race',countDur:1300,dockDelay:6200}); }
+  function stepReveal3(){ catchUp(1); bigReveal(2,{stampText:'3RD PLACE',chip:{text:'Bronze',cls:'bronze'},confetti:9,confettiDelay:900,countDur:1500,dockDelay:6600}); }
+
+  // Independent decelerating colour-flicker of a sealed "?" between the two
+  // remaining team colours, then goes quiet (neutral). All timers via later()
+  // so a skip/restart cancels them cleanly.
+  function startFlicker(node, colors, phase){
+    var ci=phase, delay=110 + phase*40;
+    function tick(){
+      node.style.color=colors[ci%colors.length]; ci++; delay*=1.11;
+      if(delay<1400){ later(tick, delay); } else { node.style.color='var(--text-secondary)'; }
+    }
+    later(tick, 500 + phase*160);   // begins during the shuffle so swaps read as meaningful
+  }
+  // cyan countdown numeral that keeps the "COLOR WARS CHAMPION" title above it
+  function cdKeep(txt){
+    var old=center.querySelector('.cdnum'); if(old) old.parentNode.removeChild(old);
+    center.appendChild(el('cdnum cyan',txt));
+  }
+
+  // Phase D core: single suspense peak on the final two teams (replaces the old
+  // standalone 2nd-place reveal + gap). Both remaining panels stay sealed.
+  function stepFinalTwo(){
+    catchUp(2);
+    hero.classList.add('gone');
+    centerClear();
+    recenterRemaining();                       // the two remaining -> 740 / 1180
+    var champTeam=sorted[0], runTeam=sorted[1];
+    var a=panelMap[champTeam.name], b=panelMap[runTeam.name];
+    // both "?" flicker between the two remaining colours, starting DURING the shuffle
+    // (so the shell-game reads as meaningful) and decelerating across the whole beat
+    var colors=[champTeam.color, runTeam.color];
+    startFlicker(a.el.querySelector('.qmark'), colors, 0);
+    startFlicker(b.el.querySelector('.qmark'), colors, 1);
+    // shell-game: swap the two centre positions 3x
+    function doSwap(){ var la=a.el.style.left; a.el.style.left=b.el.style.left; b.el.style.left=la; }
+    later(doSwap, 500); later(doSwap, 1500); later(doSwap, 2500);
+    // both slide side-by-side, grow, and BREATHE — the slow pulse holds the tension
+    // through the quiet stretches so the frame is never fully static
+    later(function(){
+      movePanel(a,null,20,1.1); movePanel(b,null,20,1.1);
+      a.box.classList.add('breathe'); b.box.classList.add('breathe');
+    }, 3200);
+    later(function(){ freeze(); }, 4200);      // freezes stray ambient, NOT the breathe pulse
+    // suspense title above (top freed since the header is hidden this beat)
+    later(function(){ var g=el('gaptitle','Color Wars Champion'); g.style.top='70px'; center.appendChild(g); }, 13000);
+    // final cyan snap-countdown (title stays visible above the numerals)
+    later(function(){ cdKeep('3'); }, 15500);
+    later(function(){ cdKeep('2'); }, 17000);
+    later(function(){ cdKeep('1'); }, 18500);
+  }
+
+  // Phase D climax: champion detonation (full treatment) + runner-up established
+  // to the side ~1.8s later, both dock into the final rail.
+  function stepClimax(){
+    catchUp(2);
+    climaxActive=true;
+    var champTeam=sorted[0], runTeam=sorted[1];
+    var champRec=panelMap[champTeam.name], runRec=panelMap[runTeam.name];
+    centerClear(); unfreeze(); hero.classList.add('gone');
+    champRec.box.classList.remove('breathe'); runRec.box.classList.remove('breathe');
+
+    // move runner-up out to a clear right-hand zone (clear of the giant flag/name)
+    runRec.el.style.zIndex='22';
+    movePanel(runRec, 1560, 0, 1.0);
+
+    // ---- CHAMPION detonation ----
+    flashOnce(1);
+    // drop the flag-silhouette clip so the ripped bands fly free across the screen
+    var fl=champRec.el.querySelector('.panel-flood'); if(fl) fl.style.clipPath='none';
+    champRec.box.style.filter='none';
+    champRec.el.classList.add('exploding');
+    var bands=champRec.el.querySelectorAll('.pband');
+    Array.prototype.forEach.call(bands,function(bd,i){
+      var ang=(i/bands.length)*Math.PI*2 + (Math.random()-0.5), dist=700+Math.random()*900;
+      bd.style.setProperty('--ex',(Math.cos(ang)*dist).toFixed(0)+'px');
+      bd.style.setProperty('--ey',(Math.sin(ang)*dist - 200).toFixed(0)+'px');
+      bd.style.setProperty('--er',((Math.random()*2-1)*220).toFixed(0)+'deg');
+      bd.style.animationDelay=(i*0.03).toFixed(2)+'s';
+    });
+    later(function(){ champRec.el.style.opacity='0'; }, 500);
+    later(function(){ champFlag.classList.add('in'); }, 350);
+    later(function(){ var s=el('champ-stamp','CHAMPIONS'); center.appendChild(s); flashOnce(0.5); }, 1500);
+    later(function(){ var nm=el('champ-name',champTeam.name); center.appendChild(nm); }, 2200);
+    later(function(){
+      var p=el('champ-pts',''); p.innerHTML='<span class="pts-num">0</span><span class="pts-lbl">pts</span>';
+      center.appendChild(p);
+      var num=p.querySelector('.pts-num');
+      odometer(num, champTeam.points, 2500, function(){ num.classList.add('gflash'); flashOnce(0.8); commitTeam(champTeam); });
+    }, 2700);
+
+    // ---- RUNNER-UP established (lighter, ~3rd-place weight) AFTER the champion's
+    // gold-flash points completion (~+5.2s). The giant champion name/points/stamp
+    // briefly recede and a bold "2ND PLACE" stamp anchors over the runner-up panel,
+    // so the two simultaneous name displays never read as competing. ----
+    later(function(){
+      revealTeam(runTeam, {chip:{text:'Silver',cls:'silver'}, countDelay:400, countDur:1400});
+      center.appendChild(el('run-stamp','2ND PLACE'));
+      championDim(true);
+      later(function(){ var c=panelCenter(runRec); confettiBurst(c.x,c.y,10); }, 500);
+    }, 5500);
+    later(function(){ commitTeam(runTeam); }, 9000);
+    // restore the champion to full glory for the infinite hold, retire the stamp
+    later(function(){ championDim(false); var rs=center.querySelector('.run-stamp'); if(rs) rs.classList.add('out'); }, 9300);
+    later(function(){ var rs=center.querySelector('.run-stamp'); if(rs&&rs.parentNode) rs.parentNode.removeChild(rs); }, 10100);
+  }
+
+  function stepHold(){ forceEndState(); footer.classList.add('show'); startStorm(); }
+
+  /* ==== SCHEDULER ==== */
+  var steps=[
+    {fn:stepGather,        dur:5000},
+    {fn:stepCountdownIntro,dur:2600},
+    {fn:stepCd3,           dur:1000},
+    {fn:stepCd2,           dur:1000},
+    {fn:stepCd1,           dur:1000},
+    {fn:stepReveal4,       dur:9500},
+    {fn:stepReveal3,       dur:12500},
+    {fn:stepFinalTwo,      dur:20500},
+    {fn:stepClimax,        dur:17000},
+    {fn:stepHold,          dur:0}
+  ];
+  var stepIndex=-1, timer=null, playing=false;
+  function runStep(i){
+    clearTimeout(timer); clearSubs();
+    if(i>=steps.length) return;
+    stepIndex=i; var st=steps[i]; st.fn();
+    if(st.dur>0){ timer=setTimeout(function(){ runStep(i+1); }, st.dur); }
+  }
+  function startSequence(){ if(!ready) return; if(playing) return; playing=true; runStep(0); }
+  function skip(){ if(!playing) return; runStep(stepIndex+1); }
+  // R does a full reload-equivalent: re-fetch fresh scores from the Sheet, then rebuild
+  function restart(){ clearTimeout(timer); timer=null; playing=false; stepIndex=-1; ready=false; bootstrap(); }
+
+  /* ==== OPERATOR CONTROLS (keyboard/mouse for the counsellor only) ==== */
+  document.addEventListener('keydown',function(e){
+    if(e.key===' '||e.code==='Space'){ e.preventDefault(); if(!playing) startSequence(); else skip(); }
+    else if(e.key==='r'||e.key==='R'){ e.preventDefault(); restart(); }
+    else if(e.key==='f'||e.key==='F'){
+      if(!document.fullscreenElement){ document.documentElement.requestFullscreen().catch(function(){}); }
+      else { document.exitFullscreen(); }
+    }
+  });
+  stage.addEventListener('click',function(){ if(!playing) startSequence(); else skip(); });
+
+  bootstrap();
+})();
+</script>
+</body>
+</html>
