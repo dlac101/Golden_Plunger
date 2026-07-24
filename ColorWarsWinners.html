@@ -253,6 +253,34 @@ body{background:#05070c;color:var(--text-primary);font:400 16px/1.4 var(--sans);
   100%{transform:translate(var(--drift,0),1220px) rotate(var(--rot,360deg));opacity:0;}}
 .flash{position:absolute;inset:0;z-index:900;background:#fff;opacity:0;pointer-events:none;}
 
+/* ============================================================
+   CHARACTER RACE BEAT  (supporting recap shown before the
+   4th-place reveal; reuses design tokens, the mini-flag ripple
+   engine, and the shared labelIn entrance keyframe)
+   ============================================================ */
+.crace{position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:64px;pointer-events:none;}
+.crace-head{display:flex;flex-direction:column;align-items:center;gap:16px;
+  opacity:0;animation:labelIn .6s ease both;}
+.crace-title{font-weight:800;text-transform:uppercase;letter-spacing:.04em;text-align:center;
+  line-height:.95;font-size:132px;
+  background:linear-gradient(96deg,var(--team-red) 0%,var(--team-yellow) 36%,var(--team-green) 68%,var(--team-blue) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 6px 30px rgba(0,0,0,.55));}
+.crace-sub{font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);
+  font-size:40px;text-shadow:0 0 34px var(--cyan-glow);}
+.crace-grid{display:flex;gap:48px;align-items:flex-end;}
+.crace-card{width:308px;display:flex;flex-direction:column;align-items:center;gap:18px;
+  padding:36px 22px 32px;border-radius:var(--radius);
+  background:linear-gradient(160deg,#1a2230,#0f141c);border:1px solid var(--border);
+  box-shadow:0 18px 34px rgba(0,0,0,.55);opacity:0;animation:labelIn .6s ease both;}
+.crace-card .mini-flag{width:120px;}
+.crace-name{font-weight:800;text-transform:uppercase;letter-spacing:.02em;line-height:1;
+  font-size:48px;color:#fff;}
+.crace-pts{font-weight:800;font-variant-numeric:tabular-nums;line-height:1;font-size:70px;}
+.crace-pts .pts-lbl{font-weight:800;font-size:.3em;color:var(--text-secondary);
+  letter-spacing:.14em;margin-left:.32em;text-transform:uppercase;vertical-align:.15em;}
+
 /* footer + operator hint */
 .footer{position:absolute;left:0;right:0;top:996px;z-index:70;text-align:center;color:var(--cyan);
   font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-size:48px;text-shadow:0 0 34px var(--cyan-glow);
@@ -314,7 +342,11 @@ body{background:#05070c;color:var(--text-primary);font:400 16px/1.4 var(--sans);
      - enter scores in the Sheet and (re)load / press R on this page.
      The parser locates the "Team" and "TOTAL" header columns by name and
      reads only the four color-team rows, so it tolerates extra columns or
-     reordering as long as each color team has a row with a TOTAL.
+     reordering as long as each color team has a row with a TOTAL. It also
+     reads the optional "Character Race" column the same by-name way (the
+     Character Race points already roll into TOTAL upstream; this extra read
+     is only so the Character Race recap beat can show the per-team split).
+     Backward compatible: if the column is absent, each team's race is 0.
   ==================================================================== */
   var CSV_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vSjBcNFy5A2KI4buO2sz7MH4mO_MAKTVfVvvIqqNBsZr2HNerP3mscjVBRB3LpL1BsI59NIevSDMrpK/pub?gid=0&single=true&output=csv';
   var COLOR_MAP={RED:'var(--team-red)',BLUE:'var(--team-blue)',GREEN:'var(--team-green)',YELLOW:'var(--team-yellow)'};
@@ -324,10 +356,10 @@ body{background:#05070c;color:var(--text-primary);font:400 16px/1.4 var(--sans);
      fetch, change bootstrap() to buildScene() at the bottom of this IIFE
      and edit these totals by hand. Live-fetched data overwrites this. */
   var TEAMS=[
-    {name:'RED',    color:'var(--team-red)',    points:340},
-    {name:'BLUE',   color:'var(--team-blue)',   points:265},
-    {name:'GREEN',  color:'var(--team-green)',  points:410},
-    {name:'YELLOW', color:'var(--team-yellow)', points:295}
+    {name:'RED',    color:'var(--team-red)',    points:340, race:900},
+    {name:'BLUE',   color:'var(--team-blue)',   points:265, race:750},
+    {name:'GREEN',  color:'var(--team-green)',  points:410, race:1350},
+    {name:'YELLOW', color:'var(--team-yellow)', points:295, race:900}
   ];
 
   /* ---- element refs ---- */
@@ -482,6 +514,10 @@ body{background:#05070c;color:var(--text-primary);font:400 16px/1.4 var(--sans);
     var totalIdx=-1;
     for(var j=0;j<cols.length;j++){ if((cols[j]||'').trim().toUpperCase()==='TOTAL'){ totalIdx=j; break; } }
     if(totalIdx<0) throw new Error('TOTAL column not found');
+    // optional Character Race column, located by header name the same way;
+    // absent => raceIdx stays -1 and every team's race resolves to 0
+    var raceIdx=-1;
+    for(var rj=0;rj<cols.length;rj++){ if((cols[rj]||'').trim().toUpperCase()==='CHARACTER RACE'){ raceIdx=rj; break; } }
     var scores={};
     for(var k=headerIdx+1;k<lines.length;k++){
       var r=lines[k].split(',');
@@ -489,12 +525,14 @@ body{background:#05070c;color:var(--text-primary);font:400 16px/1.4 var(--sans);
       if(!COLOR_MAP[nm] || scores[nm]!=null) continue;
       var pts=parseInt((r[totalIdx]||'').trim(),10);
       if(isNaN(pts)) throw new Error('non-numeric TOTAL for '+nm);
-      scores[nm]=pts;
+      var race=0;
+      if(raceIdx>-1){ var rv=parseInt((r[raceIdx]||'').trim(),10); race=isNaN(rv)?0:rv; }
+      scores[nm]={points:pts, race:race};
     }
     if(Object.keys(scores).length!==4) throw new Error('expected 4 team rows, found '+Object.keys(scores).length);
-    return ['RED','BLUE','GREEN','YELLOW'].map(function(n){return {name:n,color:COLOR_MAP[n],points:scores[n]};});
+    return ['RED','BLUE','GREEN','YELLOW'].map(function(n){return {name:n,color:COLOR_MAP[n],points:scores[n].points,race:scores[n].race};});
   }
-  function loadScores(){
+  function fetchScoresOnce(){
     var ctrl=new AbortController();
     var to=setTimeout(function(){ ctrl.abort(); }, 7000);
     // always hit the original pub?output=csv (never the rotating signed redirect
@@ -504,6 +542,21 @@ body{background:#05070c;color:var(--text-primary);font:400 16px/1.4 var(--sans);
       .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
       .then(function(t){ clearTimeout(to); return parseScoresCSV(t); },
             function(e){ clearTimeout(to); throw (e && e.name==='AbortError') ? new Error('request timed out') : e; });
+  }
+  function loadScores(){
+    // retry a couple times on transient failure (Google's CSV export endpoint
+    // intermittently 400/503s; it recovers instantly). each attempt gets its own
+    // fresh AbortController/signal + cache-bust via fetchScoresOnce(). the error
+    // overlay in bootstrap() only shows after all 3 attempts fail.
+    var maxAttempts=3, backoffs=[1000,2000];
+    function attempt(n){
+      return fetchScoresOnce().then(null, function(err){
+        if(n>=maxAttempts) throw err;
+        return new Promise(function(resolve){ setTimeout(resolve, backoffs[n-1]); })
+          .then(function(){ return attempt(n+1); });
+      });
+    }
+    return attempt(1);
   }
   function bootstrap(){
     ready=false;
@@ -735,6 +788,45 @@ body{background:#05070c;color:var(--text-primary);font:400 16px/1.4 var(--sans);
   function stepCd2(){ cdNumber('2'); }
   function stepCd1(){ cdNumber('1'); }
 
+  // ---- CHARACTER RACE recap (additive supporting beat) ----------------
+  // A brief recap inserted before the 4th-place reveal: the sealed panels
+  // step back, a compact 4-team card row shows each team's Character Race
+  // total (a hidden-character hunt whose points already fold into TOTAL),
+  // then the panels return in time for stepReveal4. Purely additive; the
+  // 4th->3rd->final-two->climax structure and its timings are untouched.
+  function stepCharacterRace(){
+    centerClear();
+    // panels recede so the recap has the stage to itself (existing --dy transition)
+    TEAMS.forEach(function(t){ var rec=panelMap[t.name]; if(rec) rec.el.style.setProperty('--dy','760px'); });
+
+    var wrap=el('crace');
+    var head=el('crace-head');
+    head.appendChild(el('crace-title','Character Race'));
+    head.appendChild(el('crace-sub','Hidden characters found around camp'));
+    wrap.appendChild(head);
+
+    var grid=el('crace-grid');
+    TEAMS.slice().sort(function(a,b){return (b.race||0)-(a.race||0);}).forEach(function(t,i){
+      var card=el('crace-card');
+      card.style.animationDelay=(0.15+i*0.12).toFixed(2)+'s';
+      var flag=document.createElement('div'); flag.className='mini-flag';
+      flag.innerHTML=flagSVG(t.color,'CR'+i,{W:38,H:28,n:6,maxAmp:5.7,maxSk:3.4,poleX:14,top:12,poleUp:6,poleDown:50,poleW:4,outlineW:2.6,baseDelay:i*0.3});
+      card.appendChild(flag);
+      card.appendChild(el('crace-name',t.name));
+      var pts=el('crace-pts'); pts.style.color=t.color;
+      pts.innerHTML='<span class="pts-num">'+(t.race||0)+'</span><span class="pts-lbl">pts</span>';
+      card.appendChild(pts);
+      grid.appendChild(card);
+    });
+    wrap.appendChild(grid);
+    center.appendChild(wrap);
+
+    // raise the panels again so they are up when stepReveal4 fires; this timer
+    // runs well inside the step's duration and the .8s transition completes as
+    // the reveal begins (runStep clears center + subs on the transition anyway)
+    later(function(){ TEAMS.forEach(function(t){ var rec=panelMap[t.name]; if(rec) rec.el.style.setProperty('--dy','0px'); }); }, 6600);
+  }
+
   // dockDelay lengthened (was 4200/4600) so the settled point total holds on the
   // big panel ~4.5s before the whole panel fades, instead of only ~2.3-2.5s
   function stepReveal4(){ bigReveal(3,{stampText:'4TH PLACE',ribbon:'Every team ran the race',countDur:1300,dockDelay:6200}); }
@@ -853,6 +945,7 @@ body{background:#05070c;color:var(--text-primary);font:400 16px/1.4 var(--sans);
     {fn:stepCd3,           dur:1000},
     {fn:stepCd2,           dur:1000},
     {fn:stepCd1,           dur:1000},
+    {fn:stepCharacterRace, dur:7600},
     {fn:stepReveal4,       dur:9500},
     {fn:stepReveal3,       dur:12500},
     {fn:stepFinalTwo,      dur:20500},
